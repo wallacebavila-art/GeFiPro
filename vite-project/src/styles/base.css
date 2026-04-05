@@ -1,0 +1,258 @@
+/* ═══════════════════════════════════════════
+   VARIÁVEIS — TEMA ESCURO (padrão)
+   ══════════════════════════════════════════ */
+:root {
+  --font-size-base: 14px;
+  --font-size-scale: 1;
+  --bg:      #080c14;
+  --s1:      #0d1220;
+  --s2:      #111828;
+  --s3:      #161f30;
+  --s4:      #1c2638;
+  --border:  #1e2d44;
+  --border2: #253550;
+  --accent:  #00d4aa;
+  --accent2: #00d4aa18;
+  --accent3: #00d4aa08;
+  --gold:    #f5a623;
+  --gold2:   #f5a62318;
+  --red:     #ff4d6d;
+  --red2:    #ff4d6d18;
+  --blue:    #4d9fff;
+  --purple:  #9b72ff;
+  --green:   #00d4aa;
+  --text:    #e8edf5;
+  --mid:     #7a8aaa;
+  --dim:     #3d4d66;
+  --font:    'Plus Jakarta Sans', sans-serif;
+  --mono:    'JetBrains Mono', monospace;
+  --r:       12px;
+  --r2:      8px;
+  --tr:      .18s ease;
+}
+
+/* ═══════════════════════════════════════════
+   VARIÁVEIS — TEMA CLARO
+   ══════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:      #f0f4f8;
+  --s1:      #ffffff;
+  --s2:      #f8fafc;
+  --s3:      #eef2f7;
+  --s4:      #e2e8f0;
+  --border:  #dde3ed;
+  --border2: #c8d2e0;
+  --text:    #1a2340;
+  --mid:     #5a6a88;
+  --dim:     #a0aec0;
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Base ─── */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  overflow: hidden;
+  transition: background var(--tr), color var(--tr), font-size var(--tr);
+}
+
+button { font-family: var(--font); cursor: pointer; }
+input, select, textarea { font-family: var(--font); }
+
+/* ═══════════════════════════════════════════
+   LAYOUT SHELL
+   ══════════════════════════════════════════ */
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ─── Sidebar (desktop) ─── */
+#sidebar {
+  width: 180px; flex-shrink: 0;
+  background: var(--s1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: background var(--tr);
+}
+.sb-logo { padding: 18px 18px 14px; border-bottom: 1px solid var(--border); }
+.sb-logo h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: -.5px; }
+.sb-logo h1 span { color: var(--accent); }
+.sb-logo p { font-size: .65rem; color: var(--mid); margin-top: 2px; }
+.sb-nav { flex: 1; padding: 8px; overflow-y: auto; }
+.sb-section { font-size: .56rem; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); padding: 10px 10px 4px; font-weight: 700; }
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--r2); margin-bottom: 2px;
+  border: none; background: none; color: var(--mid);
+  font-size: .8rem; font-weight: 500; width: 100%; text-align: left;
+  transition: var(--tr);
+}
+.sb-item:hover { background: var(--s3); color: var(--text); }
+.sb-item.active { background: var(--accent2); color: var(--accent); font-weight: 700; }
+.sb-item .sb-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+
+/* Sidebar toggle button */
+.sb-toggle-wrap { display: flex; justify-content: center; padding: 12px; border-top: 1px solid var(--border); margin-top: auto; }
+.sb-toggle { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.3rem; color: var(--mid); transition: var(--tr); }
+.sb-toggle:hover { background: var(--s3); color: var(--text); }
+
+/* Sidebar collapsed state */
+#sidebar.collapsed { width: 60px; }
+#sidebar.collapsed .sb-toggle-wrap { padding: 8px 4px; }
+#sidebar.collapsed .sb-logo { display: none; }
+#sidebar.collapsed .sb-nav { padding: 8px 4px; }
+#sidebar.collapsed .sb-item { justify-content: center; padding: 12px 4px; }
+#sidebar.collapsed .sb-item .sb-icon { font-size: 1.3rem; width: auto; }
+
+/* Select dropdown styling */
+select {
+  background: var(--s1) !important;
+  color: var(--text) !important;
+}
+
+select option {
+  background: var(--s2);
+  color: var(--text);
+  padding: 8px 12px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background: var(--accent2);
+  color: var(--accent);
+}
+
+/* Hide sidebar on mobile */
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+}
+
+/* ─── Main area ─── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); transition: background var(--tr); }
+
+/* ─── Topbar ─── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  padding: 0 16px; height: 50px; flex-shrink: 0;
+  transition: background var(--tr);
+}
+.tb-title { font-size: .92rem; font-weight: 700; }
+
+/* ─── Month tabs ─── */
+.month-tabs-wrap {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  transition: background var(--tr);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.month-tabs-wrap::-webkit-scrollbar { display: none; }
+.month-tabs-container {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  min-width: max-content;
+}
+.year-select-inline {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .8rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--r2);
+  cursor: pointer;
+  outline: none;
+  margin-right: 12px;
+  min-width: 70px;
+  transition: var(--tr);
+  flex-shrink: 0;
+}
+.year-select-inline:hover, .year-select-inline:focus {
+  border-color: var(--accent);
+  background: var(--s3);
+}
+.year-select-inline option {
+  background: var(--s2);
+  color: var(--text);
+}
+.month-tabs { 
+  display: flex; 
+  flex: 1;
+}
+.month-tabs::-webkit-scrollbar { display: none; }
+.m-tab {
+  padding: 10px 11px; 
+  border: none; 
+  background: none; 
+  color: var(--mid);
+  font-family: var(--font); 
+  font-size: .7rem; 
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer; 
+  border-bottom: 2px solid transparent; 
+  white-space: nowrap;
+  transition: var(--tr); 
+  flex-shrink: 0;
+}
+.m-tab:hover { color: var(--text); }
+.m-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── Content area ─── */
+#content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#content::-webkit-scrollbar { width: 4px; }
+#content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ─── Pages ─── */
+.page { display: block; padding: 16px; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+
+/* ─── Bottom nav (mobile) ─── */
+#bottom-nav { display: none; background: var(--s1); border-top: 1px solid var(--border); height: 58px; flex-shrink: 0; }
+.bn-items { display: flex; height: 100%; }
+.bn-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: none; background: none; color: var(--mid);
+  font-size: .55rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  transition: var(--tr);
+}
+.bn-item.active { color: var(--accent); }
+.bn-item .bn-icon { font-size: 1.2rem; }
+
+/* ─── FAB (mobile) ─── */
+#fab {
+  display: none; position: fixed; bottom: 70px; right: 16px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--accent); border: none; font-size: 1.4rem; color: #000;
+  box-shadow: 0 4px 20px var(--accent)66; z-index: 50; transition: var(--tr);
+}
+#fab:active { transform: scale(.92); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVO — Fonte Adaptável
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  :root {
+    /* Aumenta fonte em 10% no mobile para melhor legibilidade */
+    --font-size-base: calc(var(--font-size-scale, 1) * 15.4px);
+  }
+}
+
+/* Suporte a preferência do usuário por fontes grandes */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    /* Suaviza transições de fonte */
+    transition: font-size 0.2s ease;
+  }
+}

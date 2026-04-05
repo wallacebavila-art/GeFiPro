@@ -1,0 +1,27 @@
+/* ═══════════════════════════════════════════
+   PÁGINA DASHBOARD
+   ══════════════════════════════════════════ */
+
+.health-card {
+  background: linear-gradient(135deg, var(--s2), var(--s3));
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 15px; margin-bottom: 14px;
+}
+.health-top { display: flex; align-items: center; gap: 13px; margin-bottom: 10px; }
+.health-score {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 1.1rem; font-weight: 700; flex-shrink: 0; border: 3px solid;
+}
+.health-info h3 { font-size: .9rem; font-weight: 700; margin-bottom: 3px; }
+.health-info p  { font-size: .72rem; color: var(--mid); }
+.health-bar-wrap { background: var(--s4); border-radius: 99px; height: 7px; overflow: hidden; }
+.health-bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+/* Parcelamentos no dashboard */
+.parc-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.parc-item:last-child { border-bottom: none; }
+.parc-name  { font-size: .82rem; font-weight: 600; }
+.parc-sub   { font-size: .67rem; color: var(--mid); margin-top: 2px; }
+.parc-badge { background: var(--gold2); color: var(--gold); font-family: var(--mono); font-size: .67rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.parc-val   { font-family: var(--mono); font-size: .8rem; font-weight: 600; color: var(--red); text-align: right; }
