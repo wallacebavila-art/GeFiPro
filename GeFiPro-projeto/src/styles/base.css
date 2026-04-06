@@ -4,6 +4,7 @@
 :root {
   --font-size-base: 14px;
   --font-size-scale: 1;
+  --layout-scale: 1;
   --bg:      #080c14;
   --s1:      #0d1220;
   --s2:      #111828;
@@ -70,7 +71,12 @@ input, select, textarea { font-family: var(--font); }
 /* ═══════════════════════════════════════════
    LAYOUT SHELL
    ══════════════════════════════════════════ */
-#app { display: flex; height: 100vh; overflow: hidden; }
+#app { 
+  display: flex; 
+  height: 100vh; 
+  overflow: hidden;
+  zoom: var(--layout-scale);
+}
 
 /* ─── Sidebar (desktop) ─── */
 #sidebar {

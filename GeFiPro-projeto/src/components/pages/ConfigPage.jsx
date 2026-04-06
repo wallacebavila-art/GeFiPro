@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllCats, getCatColor } from "../../utils/helpers.js";
-import { CAT_COLORS_DEFAULT, FONT_SIZES } from "../../constants.js";
+import { CAT_COLORS_DEFAULT, FONT_SIZES, LAYOUT_SCALES } from "../../constants.js";
 import Button from "../ui/Button.jsx";
 import Tag from "../ui/Tag.jsx";
 import SectionHeader from "../ui/SectionHeader.jsx";
@@ -18,6 +18,7 @@ export default function ConfigPage({
   limiteParcPct,
   temaEscuro,
   fontSize,
+  layoutScale,
   catExtra,
   fbStats,
   gastos,
@@ -27,6 +28,7 @@ export default function ConfigPage({
   onSaveConfig,
   onToggleTheme,
   onChangeFontSize,
+  onChangeLayoutScale,
   onAddCategoria,
   onRemoveCategoria,
   onForceSync,
@@ -268,6 +270,47 @@ export default function ConfigPage({
                   >
                     {Object.entries(FONT_SIZES).map(([key, size]) => (
                       <option key={key} value={key}>{size.label}</option>
+                    ))}
+                  </Select>
+                  <span style={{
+                    position: 'absolute',
+                    right: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '0.7rem',
+                    color: '#fff',
+                    pointerEvents: 'none'
+                  }}>▼</span>
+                </div>
+              </div>
+            </div>
+            <div className="config-row">
+              <div>
+                <div className="config-row-label">Escala do Layout</div>
+                <div className="config-row-sub">Aumentar ou diminuir elementos</div>
+              </div>
+              <div className="config-row-right">
+                <div style={{ position: 'relative' }}>
+                  <Select 
+                    value={layoutScale} 
+                    onChange={(e) => onChangeLayoutScale(e.target.value)}
+                    style={{
+                      padding: '12px 40px 12px 16px',
+                      fontSize: '.9rem',
+                      borderRadius: 'var(--r2)',
+                      border: '2px solid var(--border)',
+                      background: '#0d1117',
+                      color: 'var(--text)',
+                      minWidth: 160,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none'
+                    }}
+                  >
+                    {Object.entries(LAYOUT_SCALES).map(([key, scale]) => (
+                      <option key={key} value={key}>{scale.label}</option>
                     ))}
                   </Select>
                   <span style={{

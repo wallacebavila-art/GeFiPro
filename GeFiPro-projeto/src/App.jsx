@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useFirebase } from './hooks/useFirebase.js';
 import { useToast } from './context/ToastContext.jsx';
 import { useLoading } from './context/LoadingContext.jsx';
-import { FONT_SIZES, FONT_SIZE_DEFAULT, CARTOES_DEFAULT } from './constants.js';
+import { FONT_SIZES, FONT_SIZE_DEFAULT, CARTOES_DEFAULT, LAYOUT_SCALES, LAYOUT_SCALE_DEFAULT } from './constants.js';
 import { mk } from './utils/helpers.js';
 
 // Layout components
@@ -35,13 +35,15 @@ import './styles/modals.css';
 
 function App() {
   // Estado global da aplicação
-  const [curYear, setCurYear] = useState(new Date().getFullYear());
+  const savedYear = localStorage.getItem('curYear');
+  const [curYear, setCurYear] = useState(savedYear ? parseInt(savedYear, 10) : new Date().getFullYear());
   const [curMonth, setCurMonth] = useState(new Date().getMonth() + 1);
   const [curPage, setCurPage] = useState('dashboard');
   const [curCartao, setCurCartao] = useState('todos');
   const [temaEscuro, setTemaEscuro] = useState(true);
   const [fontSize, setFontSize] = useState(localStorage.getItem('fontSize') || FONT_SIZE_DEFAULT);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [layoutScale, setLayoutScale] = useState(localStorage.getItem('layoutScale') || LAYOUT_SCALE_DEFAULT);
 
   // Estado dos modais
   const [gastoModalOpen, setGastoModalOpen] = useState(false);
@@ -125,6 +127,13 @@ function App() {
     localStorage.setItem('fontSize', fontSize);
   }, [fontSize]);
 
+  // Aplicar escala de layout
+  useEffect(() => {
+    const scale = LAYOUT_SCALES[layoutScale] || LAYOUT_SCALES.normal;
+    document.documentElement.style.setProperty('--layout-scale', scale.value);
+    localStorage.setItem('layoutScale', layoutScale);
+  }, [layoutScale]);
+
   // Navegação entre páginas
   const handleNavigate = (page) => {
     setCurPage(page);
@@ -181,8 +190,8 @@ function App() {
       const pObj = pgSnap || {};
       setPagamentos(pObj);
       
-      // Recarrega a página após mudar o ano
-      window.location.reload();
+      // Salvar ano no localStorage para persistir após reload
+      localStorage.setItem('curYear', year);
     } catch (e) {
       console.error('Erro ao carregar ano:', e);
       showToast('Erro ao carregar dados: ' + e.message, 'err');
@@ -597,6 +606,11 @@ function App() {
     await saveConfig('fontSize', novoTamanho);
     showToast(`Tamanho da fonte: ${FONT_SIZES[novoTamanho].label}`);
   };
+  const handleChangeLayoutScale = async (novaEscala) => {
+    setLayoutScale(novaEscala);
+    await saveConfig('layoutScale', novaEscala);
+    showToast(`Escala do layout: ${LAYOUT_SCALES[novaEscala].label}`);
+  };
   const handleForceSync = async () => {
     showToast('Sincronizando...', 'warn');
     showLoading(true);
@@ -666,6 +680,7 @@ function App() {
             limiteParcPct={config.limiteParcPct}
             temaEscuro={temaEscuro}
             fontSize={fontSize}
+            layoutScale={layoutScale}
             catExtra={catExtra}
             fbStats={fbStats}
             gastos={gastos}
@@ -675,6 +690,7 @@ function App() {
             onSaveConfig={handleSaveConfig}
             onToggleTheme={handleToggleTheme}
             onChangeFontSize={handleChangeFontSize}
+            onChangeLayoutScale={handleChangeLayoutScale}
             onAddCategoria={handleAddCategoria}
             onRemoveCategoria={handleRemoveCategoria}
             onForceSync={handleForceSync}

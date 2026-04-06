@@ -68,3 +68,13 @@ export const FONT_SIZES = {
 };
 
 export const FONT_SIZE_DEFAULT = 'normal';
+
+// Escalas de layout disponíveis
+export const LAYOUT_SCALES = {
+  small: { label: 'Compacto', value: 0.85 },
+  normal: { label: 'Padrão', value: 1 },
+  large: { label: 'Ampliado', value: 1.15 },
+  xlarge: { label: 'Muito Ampliado', value: 1.3 }
+};
+
+export const LAYOUT_SCALE_DEFAULT = 'normal';
