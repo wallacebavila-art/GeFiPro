@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFirebase } from './hooks/useFirebase.js';
 import { useToast } from './context/ToastContext.jsx';
 import { useLoading } from './context/LoadingContext.jsx';
@@ -37,8 +37,8 @@ function App() {
   // Estado global da aplicação
   const [curYear, setCurYear] = useState(new Date().getFullYear());
   const [curMonth, setCurMonth] = useState(new Date().getMonth() + 1);
-  const [curPage, setCurPage] = useState('cartoes');
-  const [curCartao, setCurCartao] = useState('itau');
+  const [curPage, setCurPage] = useState('dashboard');
+  const [curCartao, setCurCartao] = useState('todos');
   const [temaEscuro, setTemaEscuro] = useState(true);
   const [fontSize, setFontSize] = useState(localStorage.getItem('fontSize') || FONT_SIZE_DEFAULT);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -84,11 +84,17 @@ function App() {
   const showToast = useToast();
   const showLoading = useLoading();
 
-  // Inicialização
+  // Inicialização - carrega dados do mês atual ao iniciar (apenas uma vez)
+  const hasInitialized = useRef(false);
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
     async function init() {
       showLoading(true);
+      console.log('[App] Inicializando, carregando dados para:', curYear, curMonth);
       await loadAll(curYear, curMonth);
+      console.log('[App] Dados carregados');
       showLoading(false);
     }
     init();
@@ -103,6 +109,7 @@ function App() {
           console.log('[App] Erro ao registrar Service Worker:', error);
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Aplicar tema
@@ -130,6 +137,7 @@ function App() {
     
     try {
       const curKey = `${curYear}_${String(month).padStart(2, '0')}`;
+      console.log('[handleChangeMonth] Carregando mês:', curKey);
       
       const [gSnap, pgSnap] = await Promise.all([
         fetch(`https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com/gastos/${curKey}.json`).then(r => r.json()),
@@ -138,6 +146,7 @@ function App() {
       
       const gArr = [];
       if (gSnap) Object.entries(gSnap).forEach(([id, val]) => gArr.push({ id, ...val }));
+      console.log('[handleChangeMonth] Gastos carregados:', gArr.length);
       setGastos(gArr);
       
       const pObj = pgSnap || {};

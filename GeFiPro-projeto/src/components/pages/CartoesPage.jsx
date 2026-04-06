@@ -24,6 +24,8 @@ export default function CartoesPage({
   onOpenCartaoModal,
   onRemoveCartao,
 }) {
+  console.log('[CartoesPage] Render - gastos:', gastos.length, 'curCartao:', curCartao, 'curMonth:', curMonth, 'curYear:', curYear);
+  console.log('[CartoesPage] Gastos recebidos:', gastos.map(g => ({ desc: g.descricao, valor: g.valor, cartao: g.cartao })));
   const [busca, setBusca] = useState('');
   const [filtCat, setFiltCat] = useState('');
   const [filtTipo, setFiltTipo] = useState('');

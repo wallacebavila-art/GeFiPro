@@ -2,15 +2,15 @@ import { MESES } from "../../constants.js";
 
 export default function Sidebar({ curPage, curMonth, curYear, onNavigate, collapsed, onToggleCollapse }) {
   const navItems = [
-    { section: 'Principal', items: [
-      { page: 'cartoes', icon: '💳', label: 'Cartões' },
-      { page: 'debitos', icon: '📋', label: 'Débitos Fixos' },
-    ]},
     { section: 'Análise', items: [
-      { page: 'dashboard', icon: '📊', label: 'Dashboard' },
+      { page: 'dashboard', label: 'Dashboard' },
+    ]},
+    { section: 'Principal', items: [
+      { page: 'cartoes', label: 'Cartões' },
+      { page: 'debitos', label: 'Débitos Fixos' },
     ]},
     { section: 'Sistema', items: [
-      { page: 'config', icon: '⚙️', label: 'Configurações' },
+      { page: 'config', label: 'Configurações' },
     ]},
   ];
 
@@ -33,8 +33,8 @@ export default function Sidebar({ curPage, curMonth, curYear, onNavigate, collap
                 data-page={item.page}
                 onClick={() => onNavigate(item.page)}
                 title={item.label}
+                style={{ fontSize: '0.9rem' }}
               >
-                <span className="sb-icon">{item.icon}</span>
                 {!collapsed && item.label}
               </button>
             ))}

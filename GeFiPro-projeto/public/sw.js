@@ -56,33 +56,38 @@ self.addEventListener('fetch', (event) => {
   const isFirebaseRequest = url.hostname.includes('firebaseio.com');
   
   if (isFirebaseRequest) {
-    // Estratégia: Cache First, then Network para Firebase
+    // Estratégia: Network First para Firebase (sempre dados frescos)
     event.respondWith(
-      caches.open(FIREBASE_CACHE_NAME).then((cache) => {
-        return cache.match(request).then((cachedResponse) => {
-          // Retornar do cache imediatamente se existir
-          const fetchPromise = fetch(request).then((networkResponse) => {
-            if (networkResponse.ok) {
-              // Atualizar cache com dados frescos
-              cache.put(request, networkResponse.clone());
-            }
-            return networkResponse;
-          }).catch((error) => {
-            console.log('[SW] Erro na rede, usando cache:', error);
-            // Se falhar na rede, retornar cache ou erro
-            return cachedResponse || new Response(
-              JSON.stringify({ error: 'Offline e sem cache' }),
-              { 
-                status: 503, 
-                headers: { 'Content-Type': 'application/json' } 
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse.ok) {
+            // Clonar e salvar no cache em background
+            const clonedResponse = networkResponse.clone();
+            caches.open(FIREBASE_CACHE_NAME).then((cache) => {
+              cache.put(request, clonedResponse);
+            });
+          }
+          return networkResponse;
+        })
+        .catch((error) => {
+          console.log('[SW] Erro na rede, tentando cache:', error);
+          // Se falhar na rede, tentar cache
+          return caches.open(FIREBASE_CACHE_NAME).then((cache) => {
+            return cache.match(request).then((cachedResponse) => {
+              if (cachedResponse) {
+                console.log('[SW] Retornando dados do cache');
+                return cachedResponse;
               }
-            );
+              return new Response(
+                JSON.stringify({ error: 'Offline e sem cache' }),
+                { 
+                  status: 503, 
+                  headers: { 'Content-Type': 'application/json' } 
+                }
+              );
+            });
           });
-          
-          // Retornar cache se existir, senão aguardar rede
-          return cachedResponse || fetchPromise;
-        });
-      })
+        })
     );
   } else {
     // Requisições normais: Cache First

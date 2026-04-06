@@ -1,8 +1,8 @@
 const navItems = [
-  { page: 'cartoes', icon: '💳', label: 'Cartões' },
-  { page: 'debitos', icon: '📋', label: 'Fixos' },
-  { page: 'dashboard', icon: '📊', label: 'Dashboard' },
-  { page: 'config', icon: '⚙️', label: 'Config' },
+  { page: 'dashboard', label: 'Dash' },
+  { page: 'cartoes', label: 'Cartoes' },
+  { page: 'debitos', label: 'Fixos' },
+  { page: 'config', label: 'Config' },
 ];
 
 export default function BottomNav({ curPage, onNavigate, onFabClick }) {
@@ -16,8 +16,8 @@ export default function BottomNav({ curPage, onNavigate, onFabClick }) {
               className={`bn-item ${curPage === item.page ? 'active' : ''}`}
               data-page={item.page}
               onClick={() => onNavigate(item.page)}
+              style={{ fontSize: '0.7rem' }}
             >
-              <span className="bn-icon">{item.icon}</span>
               {item.label}
             </button>
           ))}

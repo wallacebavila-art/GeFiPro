@@ -7,49 +7,19 @@ import { FIREBASE_CONFIG } from '../constants.js';
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
 
-// Helper para localStorage com prefixo
-const CACHE_KEY = 'fin_cache_v1';
-const saveToCache = (data) => {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      ...data,
-      _timestamp: Date.now()
-    }));
-  } catch (e) {
-    console.warn('Erro ao salvar cache:', e);
-  }
-};
-
-const loadFromCache = () => {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const data = JSON.parse(cached);
-      // Verifica se cache tem menos de 7 dias
-      const isValid = data._timestamp && (Date.now() - data._timestamp) < 7 * 24 * 60 * 60 * 1000;
-      return isValid ? data : null;
-    }
-  } catch (e) {
-    console.warn('Erro ao carregar cache:', e);
-  }
-  return null;
-};
-
 export function useFirebase() {
-  // Inicializa estados com dados do cache (se existir)
-  const cached = loadFromCache();
-  
-  const [gastos, setGastos] = useState(cached?.gastos || []);
-  const [debitos, setDebitos] = useState(cached?.debitos || []);
-  const [catExtra, setCatExtra] = useState(cached?.catExtra || []);
-  const [cartoesExtra, setCartoesExtra] = useState(cached?.cartoesExtra || []);
-  const [pagamentos, setPagamentos] = useState(cached?.pagamentos || {});
-  const [config, setConfig] = useState(cached?.config || {
+  // Inicializa estados vazios - sempre carrega do Firebase
+  const [gastos, setGastos] = useState([]);
+  const [debitos, setDebitos] = useState([]);
+  const [catExtra, setCatExtra] = useState([]);
+  const [cartoesExtra, setCartoesExtra] = useState([]);
+  const [pagamentos, setPagamentos] = useState({});
+  const [config, setConfig] = useState({
     renda: 0,
     limiteParcPct: 0.30,
     tema: 'dark',
   });
-  const [fbStats, setFbStats] = useState({ reads: 0, writes: 0, lastSync: cached?._timestamp ? new Date(cached._timestamp) : null });
+  const [fbStats, setFbStats] = useState({ reads: 0, writes: 0, lastSync: null });
   const [connected, setConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,61 +49,57 @@ export function useFirebase() {
     
     if (!silent) setIsLoading(true);
     
+    console.log('[loadAll] Carregando dados para:', curKey);
+    
     try {
+      // Usar fetch igual ao handleChangeMonth para consistência
       const [gSnap, dSnap, cfgSnap, pgSnap] = await Promise.all([
-        get(ref(db, `gastos/${curKey}`)),
-        get(ref(db, 'debitos')),
-        get(ref(db, 'config')),
-        get(ref(db, `pagamentos/${curKey}`)),
+        fetch(`https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com/gastos/${curKey}.json`).then(r => r.json()),
+        fetch('https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com/debitos.json').then(r => r.json()),
+        fetch('https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com/config.json').then(r => r.json()),
+        fetch(`https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com/pagamentos/${curKey}.json`).then(r => r.json()),
       ]);
 
       setFbStats(prev => ({ ...prev, reads: prev.reads + 4, lastSync: new Date() }));
 
       // Processa gastos
       const gArr = [];
-      if (gSnap.exists()) gSnap.forEach(c => gArr.push({ id: c.key, ...c.val() }));
+      if (gSnap) Object.entries(gSnap).forEach(([id, val]) => gArr.push({ id, ...val }));
+      console.log('[loadAll] Gastos carregados:', gArr.length);
       setGastos(gArr);
 
       // Processa débitos
       const dArr = [];
-      if (dSnap.exists()) dSnap.forEach(c => dArr.push({ id: c.key, ...c.val() }));
+      if (dSnap) Object.entries(dSnap).forEach(([id, val]) => dArr.push({ id, ...val }));
       setDebitos(dArr);
 
       // Processa config
-      let newConfig = config;
-      if (cfgSnap.exists()) {
-        const cfg = cfgSnap.val();
+      let newConfig = {
+        renda: 0,
+        limiteParcPct: 0.30,
+        tema: 'dark',
+      };
+      if (cfgSnap) {
         newConfig = {
-          renda: cfg.renda || 0,
-          limiteParcPct: cfg.limiteParcPct || 0.30,
-          tema: cfg.tema || 'dark',
-          categorias: cfg.categorias || [],
+          renda: cfgSnap.renda || 0,
+          limiteParcPct: cfgSnap.limiteParcPct || 0.30,
+          tema: cfgSnap.tema || 'dark',
+          categorias: cfgSnap.categorias || [],
         };
         setConfig(newConfig);
-        setCatExtra(cfg.categorias || []);
-        setCartoesExtra(cfg.cartoes || []);
+        setCatExtra(cfgSnap.categorias || []);
+        setCartoesExtra(cfgSnap.cartoes || []);
       }
 
       // Processa pagamentos
-      const pObj = {};
-      if (pgSnap.exists()) pgSnap.forEach(c => { pObj[c.key] = c.val(); });
+      const pObj = pgSnap || {};
       setPagamentos(pObj);
-
-      // Salva tudo no cache
-      saveToCache({
-        gastos: gArr,
-        debitos: dArr,
-        catExtra: cfgSnap.val()?.categorias || [],
-        cartoesExtra: cfgSnap.val()?.cartoes || [],
-        pagamentos: pObj,
-        config: newConfig,
-      });
 
       return { gastos: gArr, debitos: dArr, config: newConfig, pagamentos: pObj };
     } finally {
       if (!silent) setIsLoading(false);
     }
-  }, [config]);
+  }, []);
 
   // Salvar gasto
   const saveGasto = useCallback(async (curKey, gastoData, isEdit = false) => {
@@ -202,16 +168,6 @@ export function useFirebase() {
     setFbStats(prev => ({ ...prev, writes: prev.writes + 1, lastSync: new Date() }));
   }, []);
 
-  // Limpar cache
-  const clearCache = useCallback(() => {
-    try {
-      localStorage.removeItem(CACHE_KEY);
-      console.log('Cache local limpo');
-    } catch (e) {
-      console.warn('Erro ao limpar cache:', e);
-    }
-  }, []);
-
   return {
     db,
     gastos,
@@ -237,6 +193,5 @@ export function useFirebase() {
     deleteDebito,
     togglePagamento,
     saveConfig,
-    clearCache,
   };
 }
