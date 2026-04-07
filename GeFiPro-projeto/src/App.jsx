@@ -671,6 +671,8 @@ function App() {
             limiteParcPct={config.limiteParcPct}
             curYear={curYear}
             curMonth={curMonth}
+            cartoesExtra={cartoesExtra}
+            cartoesDefault={CARTOES_DEFAULT}
           />
         );
       case 'config':

@@ -5,31 +5,31 @@
   --font-size-base: 14px;
   --font-size-scale: 1;
   --layout-scale: 1;
-  --bg:      #080c14;
-  --s1:      #0d1220;
-  --s2:      #111828;
-  --s3:      #161f30;
-  --s4:      #1c2638;
-  --border:  #1e2d44;
-  --border2: #253550;
-  --accent:  #00d4aa;
-  --accent2: #00d4aa18;
-  --accent3: #00d4aa08;
-  --gold:    #f5a623;
-  --gold2:   #f5a62318;
-  --red:     #ff4d6d;
-  --red2:    #ff4d6d18;
-  --blue:    #4d9fff;
-  --purple:  #9b72ff;
-  --green:   #00d4aa;
-  --text:    #e8edf5;
-  --mid:     #7a8aaa;
-  --dim:     #3d4d66;
+  --bg:      #0a0f1c;
+  --s1:      #0d1320;
+  --s2:      #111827;
+  --s3:      #1a2234;
+  --s4:      #1e293b;
+  --border:  #2d3748;
+  --border2: #374151;
+  --accent:  #10b981;
+  --accent2: #10b98120;
+  --accent3: #10b98110;
+  --gold:    #f59e0b;
+  --gold2:   #f59e0b20;
+  --red:     #ef4444;
+  --red2:    #ef444420;
+  --blue:    #3b82f6;
+  --purple:  #8b5cf6;
+  --green:   #10b981;
+  --text:    #f1f5f9;
+  --mid:     #94a3b8;
+  --dim:     #64748b;
   --font:    'Plus Jakarta Sans', sans-serif;
   --mono:    'JetBrains Mono', monospace;
-  --r:       12px;
-  --r2:      8px;
-  --tr:      .18s ease;
+  --r:       16px;
+  --r2:      12px;
+  --tr:      .2s ease;
 }
 
 /* ═══════════════════════════════════════════
@@ -134,9 +134,60 @@ select option:checked {
   color: var(--accent);
 }
 
-/* Hide sidebar on mobile */
-@media (max-width: 768px) {
-  #sidebar { display: none; }
+/* ─── Sum Cards (estilo imagem) ─── */
+.sum-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: var(--tr);
+}
+.sum-card:hover {
+  border-color: var(--border2);
+  background: var(--s3);
+}
+.sum-card-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+}
+.sum-card-val {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.sum-card-val.pos { color: var(--green); }
+.sum-card-val.neg { color: var(--red); }
+.sum-card-sub {
+  font-size: 0.75rem;
+  color: var(--mid);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sum-card-change {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.sum-card-change.pos {
+  color: var(--green);
+  background: var(--accent2);
+}
+.sum-card-change.neg {
+  color: var(--red);
+  background: var(--red2);
 }
 
 /* ─── Main area ─── */
