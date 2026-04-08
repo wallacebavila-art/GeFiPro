@@ -1,16 +1,22 @@
 import { MESES } from "../../constants.js";
+import CartoesIcon from "../icons/CartoesIcon.jsx";
+import ConfiguracaoIcon from "../icons/ConfiguracaoIcon.jsx";
+import DashboardIcon from "../icons/DashboardIcon.jsx";
+import DebitosIcon from "../icons/DebitosIcon.jsx";
+import InvestimentosIcon from "../icons/InvestimentosIcon.jsx";
 
 export default function Sidebar({ curPage, curMonth, curYear, onNavigate, collapsed, onToggleCollapse }) {
   const navItems = [
     { section: 'Análise', items: [
-      { page: 'dashboard', label: 'Dashboard' },
+      { page: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
     ]},
     { section: 'Principal', items: [
-      { page: 'cartoes', label: 'Cartões' },
-      { page: 'debitos', label: 'Débitos Fixos' },
+      { page: 'cartoes', label: 'Cartões', icon: CartoesIcon },
+      { page: 'debitos', label: 'Débitos Fixos', icon: DebitosIcon },
+      { page: 'investimentos', label: 'Investimentos', icon: InvestimentosIcon },
     ]},
     { section: 'Sistema', items: [
-      { page: 'config', label: 'Configurações' },
+      { page: 'config', label: 'Configurações', icon: ConfiguracaoIcon },
     ]},
   ];
 
@@ -33,8 +39,9 @@ export default function Sidebar({ curPage, curMonth, curYear, onNavigate, collap
                 data-page={item.page}
                 onClick={() => onNavigate(item.page)}
                 title={item.label}
-                style={{ fontSize: '0.9rem' }}
+                style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
+                {!collapsed && item.icon && <item.icon size={16} color="var(--text)" />}
                 {!collapsed && item.label}
               </button>
             ))}

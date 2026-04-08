@@ -53,8 +53,13 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
   const gastosCartao = gastos?.filter(g => g.cartao === cartao.id) || [];
   const totalUsado = gastosCartao.reduce((s, g) => s + (g.valor || 0), 0);
   
-  // Gerar número do cartão fake baseado no ID
-  const numeroCartao = cartao.numero || `**** **** **** ${(cartao.id || '0000').toString().slice(-4).padStart(4, '0')}`;
+  // Limite e cálculos
+  const limite = cartao.limite || 0;
+  const disponivel = Math.max(0, limite - totalUsado);
+  const percentualUsado = limite > 0 ? (totalUsado / limite) * 100 : 0;
+  
+  // Gerar número do cartão com máscara
+  const numeroCartao = `**** **** **** ${(cartao.numero || '0000').toString().padStart(4, '0')}`;
   
   // Validade
   const validade = cartao.validade || `${String(curMonth).padStart(2, '0')}/${String(curYear).slice(-2)}`;
@@ -69,6 +74,7 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
       '#ef4444': 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
       '#10b981': 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
       '#f59e0b': 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+      '#f5a623': 'linear-gradient(135deg, #f5a623 0%, #e69114 50%, #d97706 100%)',
       '#8b5cf6': 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
       '#ec4899': 'linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%)',
       '#06b6d4': 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%)',
@@ -90,7 +96,11 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
       display: 'flex',
       flexDirection: 'column',
       justifyContent: isTop ? 'space-between' : 'flex-start',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset',
+      boxShadow: isTop 
+        ? '0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)' 
+        : '0 4px 12px rgba(0,0,0,0.3)',
+      opacity: 1,
+      transform: isTop ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -134,49 +144,104 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
             letterSpacing: '2px',
             fontFamily: 'monospace',
             textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-            marginBottom: '16px'
+            marginBottom: '12px'
           }}>
             {numeroCartao}
           </div>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
+          {/* Barra de progresso do limite */}
+          {limite > 0 && (
+            <div style={{ marginBottom: '12px' }}>
               <div style={{
-                fontSize: '0.6rem',
-                color: 'rgba(255,255,255,0.6)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                marginBottom: '2px'
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.65rem',
+                color: 'rgba(255,255,255,0.7)',
+                marginBottom: '4px'
               }}>
-                Validade
+                <span>Utilizado: {percentualUsado.toFixed(0)}%</span>
+                <span>Disponível: {fmtR(disponivel)}</span>
               </div>
               <div style={{
-                fontSize: '0.9rem',
-                color: '#ffffff',
-                fontWeight: 600
+                width: '100%',
+                height: '6px',
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: '3px',
+                overflow: 'hidden'
               }}>
-                {validade}
+                <div style={{
+                  width: `${Math.min(percentualUsado, 100)}%`,
+                  height: '100%',
+                  background: percentualUsado > 90 ? '#ef4444' : percentualUsado > 70 ? '#f59e0b' : '#10b981',
+                  borderRadius: '3px',
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div>
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'rgba(255,255,255,0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: '2px'
+                }}>
+                  Fechamento
+                </div>
+                <div style={{
+                  fontSize: '0.85rem',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}>
+                  Dia {cartao.fechamento || 5}
+                </div>
+              </div>
+              
+              <div>
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'rgba(255,255,255,0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: '2px'
+                }}>
+                  Vencimento
+                </div>
+                <div style={{
+                  fontSize: '0.85rem',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}>
+                  Dia {cartao.vencimento || 10}
+                </div>
               </div>
             </div>
             
-            <div style={{ textAlign: 'right' }}>
-              <div style={{
-                fontSize: '0.6rem',
-                color: 'rgba(255,255,255,0.6)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                marginBottom: '2px'
-              }}>
-                Vencimento
+            {limite > 0 && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'rgba(255,255,255,0.6)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: '2px'
+                }}>
+                  Limite
+                </div>
+                <div style={{
+                  fontSize: '0.85rem',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}>
+                  {fmtR(limite)}
+                </div>
               </div>
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#ffffff',
-                fontWeight: 600
-              }}>
-                Dia {cartao.vencimento || 10}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}

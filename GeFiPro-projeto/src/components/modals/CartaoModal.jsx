@@ -21,6 +21,8 @@ export default function CartaoModal({
   const [cor, setCor] = useState('#4d9fff');
   const [icone, setIcone] = useState('💳');
   const [iconeImagem, setIconeImagem] = useState('');
+  const [numero, setNumero] = useState('');
+  const [limite, setLimite] = useState('');
   const [vencimento, setVencimento] = useState(10);
   const [fechamento, setFechamento] = useState(5);
 
@@ -33,6 +35,8 @@ export default function CartaoModal({
       setCor(cartao.color || '#4d9fff');
       setIcone(cartao.icone || '💳');
       setIconeImagem(cartao.iconeImagem || '');
+      setNumero(cartao.numero || '');
+      setLimite(cartao.limite || '');
       setVencimento(cartao.vencimento || 10);
       setFechamento(cartao.fechamento || 5);
     } else if (isOpen) {
@@ -42,6 +46,8 @@ export default function CartaoModal({
       setCor('#4d9fff');
       setIcone('💳');
       setIconeImagem('');
+      setNumero('');
+      setLimite('');
       setVencimento(10);
       setFechamento(5);
     }
@@ -58,6 +64,8 @@ export default function CartaoModal({
       color: cor,
       icone: iconeImagem ? '' : icone,
       iconeImagem: iconeImagem,
+      numero: numero || '',
+      limite: parseFloat(limite) || 0,
       vencimento: parseInt(vencimento) || 10,
       fechamento: parseInt(fechamento) || 5,
     });
@@ -135,7 +143,33 @@ export default function CartaoModal({
             style={{ width: 100 }}
           />
         </FormGroup>
+
+        <FormGroup label="Últimos 4 dígitos">
+          <Input
+            type="text"
+            maxLength="4"
+            placeholder="1234"
+            value={numero}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+              setNumero(val);
+            }}
+            style={{ width: 100 }}
+          />
+        </FormGroup>
       </FormRow>
+
+      {/* Limite do Cartão */}
+      <FormGroup label="Limite do Cartão">
+        <Input
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="R$ 0,00"
+          value={limite}
+          onChange={(e) => setLimite(e.target.value)}
+        />
+      </FormGroup>
 
       {/* Ícone */}
       <FormGroup label="Ícone">
@@ -275,9 +309,14 @@ export default function CartaoModal({
         <span style={{ 
           fontSize: '.75rem', 
           color: 'var(--mid)', 
-          marginLeft: 'auto' 
+          marginLeft: 'auto',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center'
         }}>
-          Venc: {vencimento} | Fech: {fechamento}
+          <span>**** {numero || '0000'}</span>
+          {limite > 0 && <span>Limite: {parseFloat(limite).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span>}
+          <span>Fech: {fechamento} | Venc: {vencimento}</span>
         </span>
       </div>
     </Modal>

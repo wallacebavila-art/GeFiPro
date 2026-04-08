@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { fmtR, calcularHealthScore, getHealthInfo } from '../../utils/helpers.js';
 import { Card, CardTitle } from '../ui/Card.jsx';
 import PizzaMinimal from '../charts/PizzaMinimal.jsx';
@@ -49,19 +49,47 @@ export default function DashboardPage({
     .sort(([, a], [, b]) => b - a)
     .slice(0, 8);
 
-  // Combinar cartões padrão e customizados
-  const [cartoesOrdem, setCartoesOrdem] = useState(() => {
-    const customIds = new Set((cartoesExtra || []).map(c => c.id));
-    const defaultsFiltered = (cartoesDefault || []).filter(c => !customIds.has(c.id));
-    return [...defaultsFiltered, ...(cartoesExtra || [])];
-  });
+  // Combinar cartões padrão e customizados (mesma lógica da CartoesPage)
+  const cartoesCalculados = useMemo(() => {
+    const CARTOES_DEFAULT = cartoesDefault || [];
+    const idsPadrao = new Set(CARTOES_DEFAULT.map(c => c.id));
+    
+    // Separar cartões extras em: padrão (com propriedades customizadas) e realmente novos
+    const extrasPadrao = (cartoesExtra || []).filter(c => idsPadrao.has(c.id));
+    const extrasNovos = (cartoesExtra || []).filter(c => !idsPadrao.has(c.id));
+    
+    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT mas com propriedades customizadas se existir
+    const defaultsComExtras = CARTOES_DEFAULT.map(c => {
+      const extra = extrasPadrao.find(e => e.id === c.id);
+      return extra ? { ...c, ...extra } : c;
+    });
+    
+    // Montar array na ordem correta: Itau -> Porto -> Nubank -> Novos
+    const resultado = [...defaultsComExtras, ...extrasNovos];
+    
+    // DEBUG: Verificar cores
+    console.log('[DashboardPage] Cartões calculados:', resultado.map(c => ({ 
+      id: c.id, 
+      name: c.name, 
+      color: c.color,
+      source: extrasPadrao.some(e => e.id === c.id) ? 'firebase' : 'default'
+    })));
+    
+    return resultado;
+  }, [cartoesExtra, cartoesDefault]);
+
+  // Estado para ordenação visual (quando clica move para frente)
+  const [cartoesOrdem, setCartoesOrdem] = useState(cartoesCalculados);
+
+  // Sincronizar quando dados externos mudarem
+  useEffect(() => {
+    setCartoesOrdem(cartoesCalculados);
+  }, [cartoesCalculados]);
 
   // Handler para mover cartão para frente
   const handleCardClick = (cartaoClicado) => {
     setCartoesOrdem(prev => {
-      // Remove o cartão clicado da posição atual
       const semClicado = prev.filter(c => c.id !== cartaoClicado.id);
-      // Coloca no início (frente da pilha)
       return [cartaoClicado, ...semClicado];
     });
   };
@@ -87,98 +115,55 @@ export default function DashboardPage({
         </div>
       </div>
 
-      {/* Layout principal: Cards de métricas (esquerda) + Gráfico (direita) */}
-      <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+      {/* Layout principal: 3 colunas - Métricas | Gráfico | Cartões */}
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch' }}>
         
-        {/* Coluna da Esquerda - Cards de métricas empilhados */}
+        {/* Coluna da Esquerda - Cards de métricas compactos */}
         <div style={{ 
-          minWidth: '280px',
-          maxWidth: '320px',
+          minWidth: '150px',
+          maxWidth: '150px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '8px',
+          alignSelf: 'stretch'
         }}>
-          <div className="sum-card">
-            <div className="sum-card-label">Total Cartões</div>
-            <div className="sum-card-val neg">{fmtR(totalCartoes)}</div>
-            <div className="sum-card-sub">
-              <span style={{ color: 'var(--green)', fontSize: '0.7rem' }}>↗ {gastos.length} lançamentos</span>
+          <div className="sum-card" style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="sum-card-label" style={{ fontSize: '0.65rem', marginBottom: '2px' }}>Total Cartões</div>
+            <div className="sum-card-val neg" style={{ fontSize: '0.9rem' }}>{fmtR(totalCartoes)}</div>
+            <div className="sum-card-sub" style={{ marginTop: '2px' }}>
+              <span style={{ color: 'var(--green)', fontSize: '0.6rem' }}>↗ {gastos.length} lançamentos</span>
             </div>
           </div>
 
-          <div className="sum-card">
-            <div className="sum-card-label">Débitos Fixos</div>
-            <div className="sum-card-val neg">{fmtR(totalDebitos)}</div>
-            <div className="sum-card-sub">
-              <span style={{ color: 'var(--mid)', fontSize: '0.7rem' }}>{debitosAtivos.length} ativos</span>
+          <div className="sum-card" style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="sum-card-label" style={{ fontSize: '0.65rem', marginBottom: '2px' }}>Débitos Fixos</div>
+            <div className="sum-card-val neg" style={{ fontSize: '0.9rem' }}>{fmtR(totalDebitos)}</div>
+            <div className="sum-card-sub" style={{ marginTop: '2px' }}>
+              <span style={{ color: 'var(--mid)', fontSize: '0.6rem' }}>{debitosAtivos.length} ativos</span>
             </div>
           </div>
 
-          <div className="sum-card">
-            <div className="sum-card-label">Total Geral</div>
-            <div className="sum-card-val neg">{fmtR(totalGeral)}</div>
+          <div className="sum-card" style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="sum-card-label" style={{ fontSize: '0.65rem', marginBottom: '2px' }}>Total Geral</div>
+            <div className="sum-card-val neg" style={{ fontSize: '0.9rem' }}>{fmtR(totalGeral)}</div>
             {renda > 0 && (
-              <div className="sum-card-sub">
-                <span style={{ color: 'var(--gold)', fontSize: '0.7rem' }}>{pctRenda.toFixed(0)}% da renda</span>
+              <div className="sum-card-sub" style={{ marginTop: '2px' }}>
+                <span style={{ color: 'var(--gold)', fontSize: '0.6rem' }}>{pctRenda.toFixed(0)}% da renda</span>
               </div>
             )}
           </div>
 
-          <div className="sum-card">
-            <div className="sum-card-label">{renda > 0 ? 'Saldo Estimado' : 'Renda'}</div>
-            <div className={`sum-card-val ${renda > 0 ? (saldo >= 0 ? 'pos' : 'neg') : ''}`}>
+          <div className="sum-card" style={{ padding: '10px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="sum-card-label" style={{ fontSize: '0.65rem', marginBottom: '2px' }}>{renda > 0 ? 'Saldo Estimado' : 'Renda'}</div>
+            <div className={`sum-card-val ${renda > 0 ? (saldo >= 0 ? 'pos' : 'neg') : ''}`} style={{ fontSize: '0.9rem' }}>
               {renda > 0 ? (saldo < 0 ? '−' : '') + fmtR(Math.abs(saldo)) : 'Não definida'}
             </div>
           </div>
-
-          {/* Cards de Cartões de Crédito - Empilhados */}
-          {cartoesOrdem.length > 0 && (
-            <div style={{ marginTop: '16px' }}>
-              <div style={{
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                color: 'var(--text)',
-                marginBottom: '12px'
-              }}>
-                My Cards
-              </div>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative'
-              }}>
-                {cartoesOrdem.map((cartao, index) => (
-                  <div
-                    key={cartao.id}
-                    onClick={() => handleCardClick(cartao)}
-                    style={{
-                      marginTop: index > 0 ? '-140px' : '0',
-                      zIndex: cartoesOrdem.length - index,
-                      position: 'relative',
-                      cursor: 'pointer',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      transform: `translateY(0) scale(1)`,
-                      opacity: 1,
-                      filter: 'none'
-                    }}
-                  >
-                    <CartaoCard
-                      cartao={cartao}
-                      gastos={gastos}
-                      curMonth={curMonth}
-                      curYear={curYear}
-                      isTop={index === 0}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Coluna da Direita - Gráfico de Pizza */}
+        {/* Coluna do Meio - Gráfico de Pizza */}
         {sortedCategories.length > 0 && (
-          <Card style={{ flex: 1, padding: '24px', minWidth: '400px' }}>
+          <Card style={{ flex: 1, padding: '24px', minWidth: '350px', alignSelf: 'stretch' }}>
             <CardTitle style={{ 
               fontSize: '0.75rem', 
               color: 'var(--dim)', 
@@ -221,6 +206,49 @@ export default function DashboardPage({
               </div>
             </div>
           </Card>
+        )}
+
+        {/* Coluna da Direita - Cards de Cartões de Crédito Empilhados */}
+        {cartoesOrdem.length > 0 && (
+          <div style={{ 
+            minWidth: '300px',
+            maxWidth: '380px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignSelf: 'stretch',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative'
+            }}>
+              {cartoesOrdem.map((cartao, index) => (
+                <div
+                  key={cartao.id}
+                  onClick={() => handleCardClick(cartao)}
+                  style={{
+                    marginTop: index > 0 ? '-140px' : '0',
+                    zIndex: cartoesOrdem.length - index,
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: `translateY(0) scale(1)`,
+                    opacity: 1,
+                    filter: 'none'
+                  }}
+                >
+                  <CartaoCard
+                    cartao={cartao}
+                    gastos={gastos}
+                    curMonth={curMonth}
+                    curYear={curYear}
+                    isTop={index === 0}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

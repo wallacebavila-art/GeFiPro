@@ -5,6 +5,10 @@ import Button from '../ui/Button.jsx';
 import Tag from '../ui/Tag.jsx';
 import ExpenseTable from './cartoes/ExpenseTable.jsx';
 import ExpenseCards from './cartoes/ExpenseCards.jsx';
+import CartoesIcon from '../icons/CartoesIcon.jsx';
+
+// Ordem fixa dos cartões: Itaú LATAM PASS -> Porto Seguro -> Nubank
+const ORDEM_FIXA = ['itau', 'porto', 'nubank'];
 
 export default function CartoesPage({
   gastos,
@@ -41,10 +45,22 @@ export default function CartoesPage({
   }, [catExtra]);
 
   const todosCartoes = useMemo(() => {
-    const customIds = new Set(cartoesExtra.map(c => c.id));
-    const defaultsFiltered = (cartoesDefault || CARTOES_DEFAULT).filter(c => !customIds.has(c.id));
-    return [...defaultsFiltered, ...cartoesExtra];
-  }, [cartoesExtra, cartoesDefault]);
+    // IDs dos cartões padrão
+    const idsPadrao = new Set(CARTOES_DEFAULT.map(c => c.id));
+    
+    // Separar cartões extras em: padrão (com propriedades customizadas) e realmente novos
+    const extrasPadrao = cartoesExtra.filter(c => idsPadrao.has(c.id));
+    const extrasNovos = cartoesExtra.filter(c => !idsPadrao.has(c.id));
+    
+    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT mas com propriedades customizadas se existir
+    const defaultsComExtras = CARTOES_DEFAULT.map(c => {
+      const extra = extrasPadrao.find(e => e.id === c.id);
+      return extra ? { ...c, ...extra } : c;
+    });
+    
+    // Montar array na ordem correta: Itau -> Porto -> Nubank -> Novos
+    return [...defaultsComExtras, ...extrasNovos];
+  }, [cartoesExtra]);
 
   const items = useMemo(() => {
     if (curCartao === 'todos') return gastos;
@@ -173,7 +189,10 @@ export default function CartoesPage({
             padding: '12px 16px'
           }}
         >
-          <span style={{ fontSize: '.95rem', fontWeight: 500 }}>💳 Gerenciar Cartões</span>
+          <span style={{ fontSize: '.95rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CartoesIcon size={18} color="var(--text)" />
+            Gerenciar Cartões
+          </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--mid)' }}>
             Expandir/Recolher
             <span style={{ 

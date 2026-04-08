@@ -16,6 +16,7 @@ import CartoesPage from './components/pages/CartoesPage.jsx';
 import DebitosPage from './components/pages/DebitosPage.jsx';
 import DashboardPage from './components/pages/DashboardPage.jsx';
 import ConfigPage from './components/pages/ConfigPage.jsx';
+import InvestimentosPage from './components/pages/InvestimentosPage.jsx';
 
 // Modal components
 import GastoModal from './components/modals/GastoModal.jsx';
@@ -661,6 +662,10 @@ function App() {
             onTogglePagamento={handleTogglePagamento}
             onValorReajuste={() => {}}
           />
+        );
+      case 'investimentos':
+        return (
+          <InvestimentosPage />
         );
       case 'dashboard':
         return (

@@ -57,7 +57,9 @@
 /* ─── Base ─── */
 html, body {
   height: 100%;
-  background: var(--bg);
+  background: var(--bg-primary, var(--bg));
+  background-attachment: fixed;
+  background-size: cover;
   color: var(--text);
   font-family: var(--font);
   font-size: var(--font-size-base);
@@ -191,7 +193,7 @@ select option:checked {
 }
 
 /* ─── Main area ─── */
-#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); transition: background var(--tr); }
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: transparent; transition: background var(--tr); }
 
 /* ─── Topbar ─── */
 #topbar {
@@ -312,4 +314,132 @@ select option:checked {
     /* Suaviza transições de fonte */
     transition: font-size 0.2s ease;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TEMAS DE CORES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Tema Teal - Verde água + Roxo */
+[data-color-theme="teal"] {
+  --accent: #14b8a6;
+  --accent-rgb: 20, 184, 166;
+  --accent-hover: #0d9488;
+  --gold: #8b5cf6;
+  --green: #10b981;
+  --red: #ef4444;
+}
+
+/* Tema Ocean - Azul + Ciano */
+[data-color-theme="ocean"] {
+  --accent: #0ea5e9;
+  --accent-rgb: 14, 165, 233;
+  --accent-hover: #0284c7;
+  --gold: #06b6d4;
+  --green: #10b981;
+  --red: #ef4444;
+}
+
+/* Tema Sunset - Laranja + Vermelho */
+[data-color-theme="sunset"] {
+  --accent: #f97316;
+  --accent-rgb: 249, 115, 22;
+  --accent-hover: #ea580c;
+  --gold: #f59e0b;
+  --green: #22c55e;
+  --red: #ef4444;
+}
+
+/* Tema Rose - Rosa + Pink */
+[data-color-theme="rose"] {
+  --accent: #f43f5e;
+  --accent-rgb: 244, 63, 94;
+  --accent-hover: #e11d48;
+  --gold: #ec4899;
+  --green: #10b981;
+  --red: #dc2626;
+}
+
+/* Tema Emerald - Verde + Limão */
+[data-color-theme="emerald"] {
+  --accent: #10b981;
+  --accent-rgb: 16, 185, 129;
+  --accent-hover: #059669;
+  --gold: #84cc16;
+  --green: #22c55e;
+  --red: #ef4444;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GRADIENTES DE FUNDO POR TEMA E MODO
+   ═══════════════════════════════════════════════════════════ */
+
+/* Dark Mode - Teal */
+[data-theme="dark"][data-color-theme="teal"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Light Mode - Teal */
+[data-theme="light"][data-color-theme="teal"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(20, 184, 166, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #f0fdfa 0%, #ccfbf1 100%);
+}
+
+/* Dark Mode - Ocean */
+[data-theme="dark"][data-color-theme="ocean"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #0c4a6e 0%, #075985 100%);
+}
+
+/* Light Mode - Ocean */
+[data-theme="light"][data-color-theme="ocean"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(14, 165, 233, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* Dark Mode - Sunset */
+[data-theme="dark"][data-color-theme="sunset"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(249, 115, 22, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(239, 68, 68, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #431407 0%, #7c2d12 100%);
+}
+
+/* Light Mode - Sunset */
+[data-theme="light"][data-color-theme="sunset"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(249, 115, 22, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+/* Dark Mode - Rose */
+[data-theme="dark"][data-color-theme="rose"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(244, 63, 94, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #4c0519 0%, #881337 100%);
+}
+
+/* Light Mode - Rose */
+[data-theme="light"][data-color-theme="rose"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(244, 63, 94, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #fff1f2 0%, #fce7f3 100%);
+}
+
+/* Dark Mode - Emerald */
+[data-theme="dark"][data-color-theme="emerald"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(132, 204, 22, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #064e3b 0%, #065f46 100%);
+}
+
+/* Light Mode - Emerald */
+[data-theme="light"][data-color-theme="emerald"] {
+  --bg-primary: radial-gradient(ellipse at top, rgba(16, 185, 129, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(132, 204, 22, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
 }
