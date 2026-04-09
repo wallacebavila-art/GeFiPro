@@ -52,10 +52,23 @@ export default function CartoesPage({
     const extrasPadrao = cartoesExtra.filter(c => idsPadrao.has(c.id));
     const extrasNovos = cartoesExtra.filter(c => !idsPadrao.has(c.id));
     
-    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT mas com propriedades customizadas se existir
+    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT
+    // mas mesclar apenas propriedades funcionais do Firebase
     const defaultsComExtras = CARTOES_DEFAULT.map(c => {
       const extra = extrasPadrao.find(e => e.id === c.id);
-      return extra ? { ...c, ...extra } : c;
+      if (extra) {
+        return {
+          ...c,
+          limite: extra.limite,
+          numero: extra.numero,
+          vencimento: extra.vencimento,
+          fechamento: extra.fechamento,
+          iconeImagem: extra.iconeImagem,
+          // SEMPRE usar nome do CARTOES_DEFAULT
+          name: c.name,
+        };
+      }
+      return c;
     });
     
     // Montar array na ordem correta: Itau -> Porto -> Nubank -> Novos
@@ -108,9 +121,11 @@ export default function CartoesPage({
   const recorrente = items.filter(g => (g.tipo || 'normal') === 'recorrente').reduce((s, g) => s + (g.valor || 0), 0);
   
   const cartao = curCartao === 'todos' 
-    ? { id: 'todos', name: 'Todos', color: '#10b981', icone: '💳' }
+    ? { id: 'todos', name: 'Todos', icone: '💳' }
     : (todosCartoes.find(c => c.id === curCartao) || todosCartoes[0] || CARTOES_DEFAULT[0]);
-  const cor = cartao?.color || '#ff4d6d';
+  
+  // Cor neutra padrão para elementos visuais (sem configuração de cor personalizada)
+  const cor = '#64748b';
 
   const handleSort = (col) => {
     if (sortCol === col) setSortAsc(!sortAsc);
@@ -130,7 +145,6 @@ export default function CartoesPage({
           title="Ver todos os cartões"
         >
           <span style={{ fontSize: '1rem', marginRight: 6 }}>💳</span>
-          <span className="cartao-dot" style={{ background: '#10b981' }}></span>
           Todos
         </button>
         {todosCartoes.map(c => (
@@ -155,7 +169,6 @@ export default function CartoesPage({
             ) : (
               <span style={{ fontSize: '1rem', marginRight: 6 }}>{c.icone || '💳'}</span>
             )}
-            <span className="cartao-dot" style={{ background: c.color }}></span>
             {c.name}
           </button>
         ))}
@@ -242,7 +255,6 @@ export default function CartoesPage({
                 ) : (
                   <span style={{ fontSize: '1rem' }}>{c.icone || '💳'}</span>
                 )}
-                <span className="cartao-dot" style={{ background: c.color, width: 8, height: 8 }}></span>
                 <span>{c.name}</span>
                 {(c.vencimento || c.fechamento) && (
                   <span style={{ color: 'var(--mid)', fontSize: '.7rem' }}>

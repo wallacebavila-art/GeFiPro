@@ -49,13 +49,65 @@ export default function ConfigPage({
     const domTheme = document.documentElement.getAttribute('data-color-theme');
     return savedTheme || domTheme || 'ocean';
   }); // Tema de cores selecionado
+  
+  // Estados locais para configurações de aparência (antes de aplicar)
+  const [pendingFontSize, setPendingFontSize] = useState(fontSize);
+  const [pendingLayoutScale, setPendingLayoutScale] = useState(layoutScale);
+  const [pendingTheme, setPendingTheme] = useState(selectedTheme);
+  const [pendingTemaEscuro, setPendingTemaEscuro] = useState(temaEscuro);
+  
+  // Sincronizar estados pendentes quando as props mudam
+  useEffect(() => {
+    setPendingFontSize(fontSize);
+  }, [fontSize]);
+  
+  useEffect(() => {
+    setPendingLayoutScale(layoutScale);
+  }, [layoutScale]);
+  
+  useEffect(() => {
+    setPendingTheme(selectedTheme);
+  }, [selectedTheme]);
+  
+  useEffect(() => {
+    setPendingTemaEscuro(temaEscuro);
+  }, [temaEscuro]);
 
   // Função para aplicar o tema de cor
   const applyTheme = (theme) => {
-    setSelectedTheme(theme);
-    document.documentElement.setAttribute('data-color-theme', theme);
-    localStorage.setItem('color-theme', theme);
+    setPendingTheme(theme);
   };
+  
+  // Função para aplicar todas as configurações de aparência
+  const handleAplicarAparência = async () => {
+    // Aplicar tema de cor
+    if (pendingTheme !== selectedTheme) {
+      setSelectedTheme(pendingTheme);
+      document.documentElement.setAttribute('data-color-theme', pendingTheme);
+      localStorage.setItem('color-theme', pendingTheme);
+    }
+    
+    // Aplicar tamanho da fonte
+    if (pendingFontSize !== fontSize) {
+      await onChangeFontSize(pendingFontSize);
+    }
+    
+    // Aplicar escala do layout
+    if (pendingLayoutScale !== layoutScale) {
+      await onChangeLayoutScale(pendingLayoutScale);
+    }
+    
+    // Aplicar tema escuro/claro
+    if (pendingTemaEscuro !== temaEscuro) {
+      await onToggleTheme();
+    }
+  };
+  
+  // Verificar se há alterações pendentes
+  const hasChanges = pendingTheme !== selectedTheme || 
+                     pendingFontSize !== fontSize || 
+                     pendingLayoutScale !== layoutScale ||
+                     pendingTemaEscuro !== temaEscuro;
 
   // Aplicar tema de cor ao carregar a página
   useEffect(() => {
@@ -263,8 +315,8 @@ export default function ConfigPage({
                     gap: '6px',
                     padding: '12px 16px',
                     borderRadius: '12px',
-                    border: selectedTheme === 'teal' ? '2px solid var(--accent)' : '2px solid var(--border)',
-                    background: selectedTheme === 'teal' ? 'var(--s2)' : 'var(--s1)',
+                    border: pendingTheme === 'teal' ? '2px solid var(--accent)' : '2px solid var(--border)',
+                    background: pendingTheme === 'teal' ? 'var(--s2)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     minWidth: '70px'
@@ -275,7 +327,7 @@ export default function ConfigPage({
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#8b5cf6' }}></div>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text)' }}>Teal</span>
-                  {selectedTheme === 'teal' && (
+                  {pendingTheme === 'teal' && (
                     <div style={{ position: 'absolute', top: '8px', right: '8px', width: '18px', height: '18px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>✓</div>
                   )}
                 </button>
@@ -290,8 +342,8 @@ export default function ConfigPage({
                     gap: '6px',
                     padding: '12px 16px',
                     borderRadius: '12px',
-                    border: selectedTheme === 'ocean' ? '2px solid var(--accent)' : '2px solid var(--border)',
-                    background: selectedTheme === 'ocean' ? 'var(--s2)' : 'var(--s1)',
+                    border: pendingTheme === 'ocean' ? '2px solid var(--accent)' : '2px solid var(--border)',
+                    background: pendingTheme === 'ocean' ? 'var(--s2)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     minWidth: '70px',
@@ -303,7 +355,7 @@ export default function ConfigPage({
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#06b6d4' }}></div>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text)' }}>Ocean</span>
-                  {selectedTheme === 'ocean' && (
+                  {pendingTheme === 'ocean' && (
                     <div style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff' }}>✓</div>
                   )}
                 </button>
@@ -318,8 +370,8 @@ export default function ConfigPage({
                     gap: '6px',
                     padding: '12px 16px',
                     borderRadius: '12px',
-                    border: selectedTheme === 'sunset' ? '2px solid #f59e0b' : '2px solid var(--border)',
-                    background: selectedTheme === 'sunset' ? 'rgba(245, 158, 11, 0.1)' : 'var(--s1)',
+                    border: pendingTheme === 'sunset' ? '2px solid #f59e0b' : '2px solid var(--border)',
+                    background: pendingTheme === 'sunset' ? 'rgba(245, 158, 11, 0.1)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     minWidth: '70px',
@@ -331,7 +383,7 @@ export default function ConfigPage({
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ef4444' }}></div>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text)' }}>Sunset</span>
-                  {selectedTheme === 'sunset' && (
+                  {pendingTheme === 'sunset' && (
                     <div style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff' }}>✓</div>
                   )}
                 </button>
@@ -346,8 +398,8 @@ export default function ConfigPage({
                     gap: '6px',
                     padding: '12px 16px',
                     borderRadius: '12px',
-                    border: selectedTheme === 'rose' ? '2px solid #ec4899' : '2px solid var(--border)',
-                    background: selectedTheme === 'rose' ? 'rgba(236, 72, 153, 0.1)' : 'var(--s1)',
+                    border: pendingTheme === 'rose' ? '2px solid #ec4899' : '2px solid var(--border)',
+                    background: pendingTheme === 'rose' ? 'rgba(236, 72, 153, 0.1)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     minWidth: '70px',
@@ -359,7 +411,7 @@ export default function ConfigPage({
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#ec4899' }}></div>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text)' }}>Rose</span>
-                  {selectedTheme === 'rose' && (
+                  {pendingTheme === 'rose' && (
                     <div style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff' }}>✓</div>
                   )}
                 </button>
@@ -374,8 +426,8 @@ export default function ConfigPage({
                     gap: '6px',
                     padding: '12px 16px',
                     borderRadius: '12px',
-                    border: selectedTheme === 'emerald' ? '2px solid #10b981' : '2px solid var(--border)',
-                    background: selectedTheme === 'emerald' ? 'rgba(16, 185, 129, 0.1)' : 'var(--s1)',
+                    border: pendingTheme === 'emerald' ? '2px solid #10b981' : '2px solid var(--border)',
+                    background: pendingTheme === 'emerald' ? 'rgba(16, 185, 129, 0.1)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     minWidth: '70px',
@@ -387,7 +439,7 @@ export default function ConfigPage({
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#84cc16' }}></div>
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text)' }}>Emerald</span>
-                  {selectedTheme === 'emerald' && (
+                  {pendingTheme === 'emerald' && (
                     <div style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#fff' }}>✓</div>
                   )}
                 </button>
@@ -401,38 +453,38 @@ export default function ConfigPage({
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
-                  onClick={() => temaEscuro && onToggleTheme()}
+                  onClick={() => setPendingTemaEscuro(false)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     padding: '10px 20px',
                     borderRadius: '10px',
-                    border: !temaEscuro ? '2px solid var(--accent)' : '2px solid var(--border)',
-                    background: !temaEscuro ? 'var(--s2)' : 'var(--s1)',
+                    border: !pendingTemaEscuro ? '2px solid var(--accent)' : '2px solid var(--border)',
+                    background: !pendingTemaEscuro ? 'var(--s2)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
                 >
                   <span style={{ fontSize: '1rem' }}>☀️</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text)', fontWeight: !temaEscuro ? 600 : 400 }}>Claro</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text)', fontWeight: !pendingTemaEscuro ? 600 : 400 }}>Claro</span>
                 </button>
                 <button
-                  onClick={() => !temaEscuro && onToggleTheme()}
+                  onClick={() => setPendingTemaEscuro(true)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     padding: '10px 20px',
                     borderRadius: '10px',
-                    border: temaEscuro ? '2px solid var(--accent)' : '2px solid var(--border)',
-                    background: temaEscuro ? 'var(--s2)' : 'var(--s1)',
+                    border: pendingTemaEscuro ? '2px solid var(--accent)' : '2px solid var(--border)',
+                    background: pendingTemaEscuro ? 'var(--s2)' : 'var(--s1)',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
                 >
                   <span style={{ fontSize: '1rem' }}>🌙</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text)', fontWeight: temaEscuro ? 600 : 400 }}>Escuro</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text)', fontWeight: pendingTemaEscuro ? 600 : 400 }}>Escuro</span>
                 </button>
               </div>
             </div>
@@ -446,8 +498,8 @@ export default function ConfigPage({
                 <label className="toggle-switch">
                   <input 
                     type="checkbox" 
-                    checked={temaEscuro} 
-                    onChange={onToggleTheme}
+                    checked={pendingTemaEscuro} 
+                    onChange={(e) => setPendingTemaEscuro(e.target.checked)}
                   />
                   <span className="toggle-track"></span>
                   <span className="toggle-thumb"></span>
@@ -462,8 +514,8 @@ export default function ConfigPage({
               <div className="config-row-right">
                 <div style={{ position: 'relative' }}>
                   <Select 
-                    value={fontSize} 
-                    onChange={(e) => onChangeFontSize(e.target.value)}
+                    value={pendingFontSize} 
+                    onChange={(e) => setPendingFontSize(e.target.value)}
                     style={{
                       padding: '12px 40px 12px 16px',
                       fontSize: '.9rem',
@@ -503,8 +555,8 @@ export default function ConfigPage({
               <div className="config-row-right">
                 <div style={{ position: 'relative' }}>
                   <Select 
-                    value={layoutScale} 
-                    onChange={(e) => onChangeLayoutScale(e.target.value)}
+                    value={pendingLayoutScale} 
+                    onChange={(e) => setPendingLayoutScale(e.target.value)}
                     style={{
                       padding: '12px 40px 12px 16px',
                       fontSize: '.9rem',
@@ -535,6 +587,20 @@ export default function ConfigPage({
                   }}>▼</span>
                 </div>
               </div>
+            </div>
+            
+            {/* Botão Aplicar */}
+            <div style={{ padding: '16px 14px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+              <Button 
+                onClick={handleAplicarAparência}
+                disabled={!hasChanges}
+                style={{
+                  opacity: hasChanges ? 1 : 0.5,
+                  cursor: hasChanges ? 'pointer' : 'not-allowed'
+                }}
+              >
+                ✓ Aplicar
+              </Button>
             </div>
           </>
         )}

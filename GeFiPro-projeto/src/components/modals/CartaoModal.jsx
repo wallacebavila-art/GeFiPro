@@ -18,7 +18,6 @@ export default function CartaoModal({
 }) {
   const [id, setId] = useState('');
   const [nome, setNome] = useState('');
-  const [cor, setCor] = useState('#4d9fff');
   const [icone, setIcone] = useState('💳');
   const [iconeImagem, setIconeImagem] = useState('');
   const [numero, setNumero] = useState('');
@@ -32,7 +31,6 @@ export default function CartaoModal({
     if (cartao) {
       setId(cartao.id || '');
       setNome(cartao.name || '');
-      setCor(cartao.color || '#4d9fff');
       setIcone(cartao.icone || '💳');
       setIconeImagem(cartao.iconeImagem || '');
       setNumero(cartao.numero || '');
@@ -43,7 +41,6 @@ export default function CartaoModal({
       // Novo cartão
       setId('');
       setNome('');
-      setCor('#4d9fff');
       setIcone('💳');
       setIconeImagem('');
       setNumero('');
@@ -61,7 +58,6 @@ export default function CartaoModal({
     onSave({
       id: cartaoId,
       name: nome.trim(),
-      color: cor,
       icone: iconeImagem ? '' : icone,
       iconeImagem: iconeImagem,
       numero: numero || '',
@@ -99,29 +95,8 @@ export default function CartaoModal({
         />
       </FormGroup>
 
-      {/* Cor, Vencimento e Fechamento */}
+      {/* Vencimento e Fechamento */}
       <FormRow>
-        <FormGroup label="Cor">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <input
-              type="color"
-              value={cor}
-              onChange={(e) => setCor(e.target.value)}
-              style={{ 
-                width: 60, 
-                height: 40, 
-                border: '1px solid var(--border)', 
-                borderRadius: 'var(--r2)', 
-                padding: 2, 
-                cursor: 'pointer'
-              }}
-            />
-            <span style={{ fontSize: '.8rem', color: 'var(--mid)' }}>
-              {cor}
-            </span>
-          </div>
-        </FormGroup>
-
         <FormGroup label="Vencimento">
           <Input
             type="number"
@@ -296,13 +271,6 @@ export default function CartaoModal({
         ) : (
           <span style={{ fontSize: '1.5rem' }}>{icone}</span>
         )}
-        <span className="cartao-dot" style={{ 
-          background: cor, 
-          width: 12, 
-          height: 12, 
-          borderRadius: '50%',
-          display: 'inline-block'
-        }}></span>
         <span style={{ fontWeight: 500 }}>
           {nome || 'Nome do Cartão'}
         </span>

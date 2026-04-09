@@ -8,9 +8,9 @@ export const MESES_S = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','O
 // Cartões padrão do sistema (podem ser editados pelo usuário)
 // Ordem fixa: Itaú LATAM PASS -> Porto Seguro -> Nubank
 export const CARTOES_DEFAULT = [
-  { id:'itau',   name:'Itaú LATAM PASS', color:'#f5a623', vencimento: 10, fechamento: 5, icone: '💳' },
-  { id:'porto',  name:'Porto Seguro',     color:'#4d9fff', vencimento: 15, fechamento: 10, icone: '�' },
-  { id:'nubank', name:'Nubank',           color:'#9b72ff', vencimento: 8,  fechamento: 1, icone: '�' },
+  { id:'itau',   name:'Itaú LATAM PASS', vencimento: 10, fechamento: 5, icone: '💳' },
+  { id:'porto',  name:'Porto Seguro',     vencimento: 15, fechamento: 10, icone: '🔵' },
+  { id:'nubank', name:'Nubank',           vencimento: 8,  fechamento: 1, icone: '💜' },
 ];
 
 // Cartões do usuário - exporta os padrão para compatibilidade

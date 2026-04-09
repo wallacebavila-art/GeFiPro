@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { fmtR } from '../../utils/helpers.js';
 
 // Componente para exibir a bandeira do cartão
-function BandeiraIcon({ bandeira, color }) {
+function BandeiraIcon({ bandeira }) {
   const bandeiras = {
     visa: (
       <svg viewBox="0 0 48 48" width="48" height="48">
@@ -39,7 +40,7 @@ function BandeiraIcon({ bandeira, color }) {
     ),
     default: (
       <svg viewBox="0 0 48 48" width="48" height="48">
-        <rect fill={color || '#6366f1'} width="48" height="48" rx="4"/>
+        <rect fill="#6366f1" width="48" height="48" rx="4"/>
         <text x="24" y="30" textAnchor="middle" fill="#FFFFFF" fontSize="20">💳</text>
       </svg>
     )
@@ -49,6 +50,7 @@ function BandeiraIcon({ bandeira, color }) {
 }
 
 export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop }) {
+  const [isHovered, setIsHovered] = useState(false);
   // Calcular gastos do cartão no período atual
   const gastosCartao = gastos?.filter(g => g.cartao === cartao.id) || [];
   const totalUsado = gastosCartao.reduce((s, g) => s + (g.valor || 0), 0);
@@ -67,43 +69,56 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
   // Bandeira (visa, mastercard, amex, elo, hipercard)
   const bandeira = cartao.bandeira || 'default';
   
-  // Cores do gradiente baseadas na cor do cartão
-  const getGradient = (color) => {
-    const gradients = {
-      '#3b82f6': 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)',
-      '#ef4444': 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
-      '#10b981': 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-      '#f59e0b': 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
-      '#f5a623': 'linear-gradient(135deg, #f5a623 0%, #e69114 50%, #d97706 100%)',
-      '#8b5cf6': 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
-      '#ec4899': 'linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%)',
-      '#06b6d4': 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%)',
-      '#f97316': 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%)',
-    };
-    return gradients[color] || `linear-gradient(135deg, ${color} 0%, ${color}dd 50%, ${color}bb 100%)`;
-  };
-
-  const gradient = getGradient(cartao.color);
+  // Cor neutra padrão para todos os cartões (sem personalização de cor)
+  const gradient = 'linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%)';
 
   return (
     <div style={{
       background: gradient,
-      borderRadius: '20px',
-      padding: isTop ? '28px' : '24px',
+      borderRadius: '16px',
+      padding: isTop ? '24px' : '20px',
       minWidth: '340px',
       maxWidth: '400px',
-      height: isTop ? '220px' : '160px',
+      height: '180px',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: isTop ? 'space-between' : 'flex-start',
-      boxShadow: isTop 
-        ? '0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)' 
-        : '0 4px 12px rgba(0,0,0,0.3)',
+      justifyContent: 'space-between',
       opacity: 1,
-      transform: isTop ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
       position: 'relative',
-      overflow: 'hidden'
-    }}>
+      overflow: 'hidden',
+      border: isTop ? 'none' : `2px solid ${isHovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'}`,
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+      boxShadow: isTop 
+        ? '0 16px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.15)' 
+        : isHovered 
+          ? '0 10px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2)'
+          : '0 8px 20px rgba(0,0,0,0.25)',
+    }}
+    // Hover desabilitado para teste
+    // onMouseEnter={() => setIsHovered(true)}
+    // onMouseLeave={() => setIsHovered(false)}
+  >
+      {/* Indicador de clicável para cartões de trás */}
+      {!isTop && (
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          background: isHovered ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+          color: isHovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)',
+          pointerEvents: 'none',
+          transition: 'background 0.15s, color 0.15s'
+        }}>
+          ↑
+        </div>
+      )}
       {/* Header - Saldo e Bandeira */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
         <div>
@@ -113,30 +128,65 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
             marginBottom: '4px',
             fontWeight: 500
           }}>
-            {isTop ? 'Saldo Atual' : cartao.name}
+            {cartao.name}
           </div>
-          {isTop && (
-            <div style={{
-              fontSize: '1.75rem',
-              fontWeight: 700,
-              color: '#ffffff',
-              letterSpacing: '-0.5px'
-            }}>
-              {fmtR(totalUsado)}
-            </div>
-          )}
+          <div style={{
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: '#ffffff',
+            letterSpacing: '-0.5px'
+          }}>
+            {fmtR(totalUsado)}
+          </div>
         </div>
         <div style={{ 
-          width: isTop ? '48px' : '36px', 
-          height: isTop ? '48px' : '36px',
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+          width: '60px', 
+          height: '60px',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
-          <BandeiraIcon bandeira={bandeira} color={cartao.color} />
+          {cartao.id === 'itau' ? (
+            <img 
+              src="/assets/Itaú_Unibanco_logo_2023.svg.png" 
+              alt="Itaú"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                borderRadius: '4px'
+              }}
+            />
+          ) : cartao.id === 'porto' ? (
+            <img 
+              src="/assets/Porto_Seguro_Logo-removebg-preview.png" 
+              alt="Porto Seguro"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                borderRadius: '4px'
+              }}
+            />
+          ) : cartao.id === 'nubank' ? (
+            <img 
+              src="/assets/nubank-icon.png" 
+              alt="Nubank"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                borderRadius: '4px'
+              }}
+            />
+          ) : (
+            <BandeiraIcon bandeira={bandeira} />
+          )}
         </div>
       </div>
 
-      {isTop && (
-        <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{
             fontSize: '1.1rem',
             color: '#ffffff',
@@ -243,8 +293,7 @@ export default function CartaoCard({ cartao, gastos, curMonth, curYear, isTop })
               </div>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

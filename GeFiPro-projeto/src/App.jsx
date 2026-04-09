@@ -547,12 +547,11 @@ function App() {
   };
 
   // Adicionar/Editar cartão
-  const handleAddCartao = async (nome, cor, icone, iconeImagem, vencimento, fechamento) => {
+  const handleAddCartao = async (nome, icone, iconeImagem, vencimento, fechamento) => {
     const id = nome.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const novoCartao = { 
       id, 
       name: nome, 
-      color: cor, 
       icone: iconeImagem ? '' : (icone || '💳'), 
       iconeImagem: iconeImagem || '',
       vencimento: vencimento || 10,
@@ -591,7 +590,7 @@ function App() {
       handleEditCartao(cartaoData);
     } else {
       // Novo cartão
-      handleAddCartao(cartaoData.name, cartaoData.color, cartaoData.icone, cartaoData.iconeImagem, cartaoData.vencimento, cartaoData.fechamento);
+      handleAddCartao(cartaoData.name, cartaoData.icone, cartaoData.iconeImagem, cartaoData.vencimento, cartaoData.fechamento);
     }
   };
 

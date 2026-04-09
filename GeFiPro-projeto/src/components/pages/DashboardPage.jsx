@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fmtR, calcularHealthScore, getHealthInfo } from '../../utils/helpers.js';
 import { Card, CardTitle } from '../ui/Card.jsx';
 import PizzaMinimal from '../charts/PizzaMinimal.jsx';
@@ -58,24 +59,28 @@ export default function DashboardPage({
     const extrasPadrao = (cartoesExtra || []).filter(c => idsPadrao.has(c.id));
     const extrasNovos = (cartoesExtra || []).filter(c => !idsPadrao.has(c.id));
     
-    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT mas com propriedades customizadas se existir
+    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT 
+    // mas mesclar propriedades funcionais do Firebase (limite, numero, vencimento, fechamento)
     const defaultsComExtras = CARTOES_DEFAULT.map(c => {
       const extra = extrasPadrao.find(e => e.id === c.id);
-      return extra ? { ...c, ...extra } : c;
+      if (extra) {
+        // Usar propriedades funcionais do Firebase, mas manter nome do default
+        return { 
+          ...c, 
+          limite: extra.limite,
+          numero: extra.numero,
+          vencimento: extra.vencimento,
+          fechamento: extra.fechamento,
+          iconeImagem: extra.iconeImagem,
+          // SEMPRE usar nome do CARTOES_DEFAULT
+          name: c.name,
+        };
+      }
+      return c;
     });
     
     // Montar array na ordem correta: Itau -> Porto -> Nubank -> Novos
-    const resultado = [...defaultsComExtras, ...extrasNovos];
-    
-    // DEBUG: Verificar cores
-    console.log('[DashboardPage] Cartões calculados:', resultado.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      color: c.color,
-      source: extrasPadrao.some(e => e.id === c.id) ? 'firebase' : 'default'
-    })));
-    
-    return resultado;
+    return [...defaultsComExtras, ...extrasNovos];
   }, [cartoesExtra, cartoesDefault]);
 
   // Estado para ordenação visual (quando clica move para frente)
@@ -116,7 +121,7 @@ export default function DashboardPage({
       </div>
 
       {/* Layout principal: 3 colunas - Métricas | Gráfico | Cartões */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', overflow: 'visible' }}>
         
         {/* Coluna da Esquerda - Cards de métricas compactos */}
         <div style={{ 
@@ -215,38 +220,67 @@ export default function DashboardPage({
             maxWidth: '380px',
             display: 'flex',
             flexDirection: 'column',
-            alignSelf: 'stretch',
-            justifyContent: 'center'
+            alignSelf: 'flex-start',
+            justifyContent: 'flex-start',
+            overflow: 'visible'
           }}>
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative'
+              position: 'relative',
+              minHeight: cartoesOrdem.length === 1 ? '230px' : `${120 + (cartoesOrdem.length * 50)}px`,
+              overflow: 'visible',
+              paddingBottom: '20px'
             }}>
-              {cartoesOrdem.map((cartao, index) => (
-                <div
-                  key={cartao.id}
-                  onClick={() => handleCardClick(cartao)}
-                  style={{
-                    marginTop: index > 0 ? '-140px' : '0',
-                    zIndex: cartoesOrdem.length - index,
-                    position: 'relative',
-                    cursor: 'pointer',
-                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: `translateY(0) scale(1)`,
-                    opacity: 1,
-                    filter: 'none'
-                  }}
-                >
-                  <CartaoCard
-                    cartao={cartao}
-                    gastos={gastos}
-                    curMonth={curMonth}
-                    curYear={curYear}
-                    isTop={index === 0}
-                  />
-                </div>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {cartoesOrdem.map((cartao, index) => (
+                  <motion.div
+                    key={cartao.id}
+                    layout
+                    onClick={() => handleCardClick(cartao)}
+                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: index === 1 ? index * 50 + 7 : index === 2 ? index * 50 + 5 : index * 50,
+                      x: index === 2 ? 33 : index * 25,
+                      scale: index === 0 ? 1 : 0.92,
+                      zIndex: cartoesOrdem.length - index
+                    }}
+                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                    transition={{ 
+                      duration: 0.5, 
+                      ease: [0.4, 0, 0.2, 1],
+                      layout: { duration: 0.4, ease: "easeInOut" }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      cursor: 'pointer',
+                      transformOrigin: 'center center',
+                      pointerEvents: 'auto'
+                    }}
+                    // whileHover desabilitado para teste
+                    // whileHover={{ 
+                    //   scale: 1.01, 
+                    //   y: index * 50 - 4, 
+                    //   x: index * 15,
+                    //   zIndex: 100,
+                    //   transition: { duration: 0.15, ease: "easeOut" }
+                    // }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <CartaoCard
+                      cartao={cartao}
+                      gastos={gastos}
+                      curMonth={curMonth}
+                      curYear={curYear}
+                      isTop={index === 0}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         )}

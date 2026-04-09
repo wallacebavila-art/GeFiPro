@@ -2,6 +2,16 @@
    PÁGINA DASHBOARD
    ══════════════════════════════════════════ */
 
+/* Garantir que a página dashboard mostre todos os cartões */
+#page-dashboard {
+  overflow: visible !important;
+  min-height: 100%;
+}
+
+#page-dashboard .page {
+  overflow: visible !important;
+}
+
 .health-card {
   background: linear-gradient(135deg, var(--s2), var(--s3));
   border: 1px solid var(--border); border-radius: var(--r);
