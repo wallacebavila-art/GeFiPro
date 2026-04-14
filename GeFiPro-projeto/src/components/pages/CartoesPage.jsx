@@ -5,6 +5,10 @@ import Button from '../ui/Button.jsx';
 import Tag from '../ui/Tag.jsx';
 import ExpenseTable from './cartoes/ExpenseTable.jsx';
 import ExpenseCards from './cartoes/ExpenseCards.jsx';
+import CartoesIcon from '../icons/CartoesIcon.jsx';
+
+// Ordem fixa dos cartões: Itaú LATAM PASS -> Porto Seguro -> Nubank
+const ORDEM_FIXA = ['itau', 'porto', 'nubank'];
 
 export default function CartoesPage({
   gastos,
@@ -41,10 +45,35 @@ export default function CartoesPage({
   }, [catExtra]);
 
   const todosCartoes = useMemo(() => {
-    const customIds = new Set(cartoesExtra.map(c => c.id));
-    const defaultsFiltered = (cartoesDefault || CARTOES_DEFAULT).filter(c => !customIds.has(c.id));
-    return [...defaultsFiltered, ...cartoesExtra];
-  }, [cartoesExtra, cartoesDefault]);
+    // IDs dos cartões padrão
+    const idsPadrao = new Set(CARTOES_DEFAULT.map(c => c.id));
+    
+    // Separar cartões extras em: padrão (com propriedades customizadas) e realmente novos
+    const extrasPadrao = cartoesExtra.filter(c => idsPadrao.has(c.id));
+    const extrasNovos = cartoesExtra.filter(c => !idsPadrao.has(c.id));
+    
+    // Para cada cartão padrão, usar a versão do CARTOES_DEFAULT
+    // mas mesclar apenas propriedades funcionais do Firebase
+    const defaultsComExtras = CARTOES_DEFAULT.map(c => {
+      const extra = extrasPadrao.find(e => e.id === c.id);
+      if (extra) {
+        return {
+          ...c,
+          limite: extra.limite,
+          numero: extra.numero,
+          vencimento: extra.vencimento,
+          fechamento: extra.fechamento,
+          iconeImagem: extra.iconeImagem,
+          // SEMPRE usar nome do CARTOES_DEFAULT
+          name: c.name,
+        };
+      }
+      return c;
+    });
+    
+    // Montar array na ordem correta: Itau -> Porto -> Nubank -> Novos
+    return [...defaultsComExtras, ...extrasNovos];
+  }, [cartoesExtra]);
 
   const items = useMemo(() => {
     if (curCartao === 'todos') return gastos;
@@ -92,9 +121,11 @@ export default function CartoesPage({
   const recorrente = items.filter(g => (g.tipo || 'normal') === 'recorrente').reduce((s, g) => s + (g.valor || 0), 0);
   
   const cartao = curCartao === 'todos' 
-    ? { id: 'todos', name: 'Todos', color: '#10b981', icone: '💳' }
+    ? { id: 'todos', name: 'Todos', icone: '💳' }
     : (todosCartoes.find(c => c.id === curCartao) || todosCartoes[0] || CARTOES_DEFAULT[0]);
-  const cor = cartao?.color || '#ff4d6d';
+  
+  // Cor neutra padrão para elementos visuais (sem configuração de cor personalizada)
+  const cor = '#64748b';
 
   const handleSort = (col) => {
     if (sortCol === col) setSortAsc(!sortAsc);
@@ -114,7 +145,6 @@ export default function CartoesPage({
           title="Ver todos os cartões"
         >
           <span style={{ fontSize: '1rem', marginRight: 6 }}>💳</span>
-          <span className="cartao-dot" style={{ background: '#10b981' }}></span>
           Todos
         </button>
         {todosCartoes.map(c => (
@@ -139,7 +169,6 @@ export default function CartoesPage({
             ) : (
               <span style={{ fontSize: '1rem', marginRight: 6 }}>{c.icone || '💳'}</span>
             )}
-            <span className="cartao-dot" style={{ background: c.color }}></span>
             {c.name}
           </button>
         ))}
@@ -173,7 +202,10 @@ export default function CartoesPage({
             padding: '12px 16px'
           }}
         >
-          <span style={{ fontSize: '.95rem', fontWeight: 500 }}>💳 Gerenciar Cartões</span>
+          <span style={{ fontSize: '.95rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CartoesIcon size={18} color="var(--text)" />
+            Gerenciar Cartões
+          </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--mid)' }}>
             Expandir/Recolher
             <span style={{ 
@@ -223,7 +255,6 @@ export default function CartoesPage({
                 ) : (
                   <span style={{ fontSize: '1rem' }}>{c.icone || '💳'}</span>
                 )}
-                <span className="cartao-dot" style={{ background: c.color, width: 8, height: 8 }}></span>
                 <span>{c.name}</span>
                 {(c.vencimento || c.fechamento) && (
                   <span style={{ color: 'var(--mid)', fontSize: '.7rem' }}>

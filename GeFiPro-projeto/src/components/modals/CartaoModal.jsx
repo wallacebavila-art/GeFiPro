@@ -18,9 +18,10 @@ export default function CartaoModal({
 }) {
   const [id, setId] = useState('');
   const [nome, setNome] = useState('');
-  const [cor, setCor] = useState('#4d9fff');
   const [icone, setIcone] = useState('💳');
   const [iconeImagem, setIconeImagem] = useState('');
+  const [numero, setNumero] = useState('');
+  const [limite, setLimite] = useState('');
   const [vencimento, setVencimento] = useState(10);
   const [fechamento, setFechamento] = useState(5);
 
@@ -30,18 +31,20 @@ export default function CartaoModal({
     if (cartao) {
       setId(cartao.id || '');
       setNome(cartao.name || '');
-      setCor(cartao.color || '#4d9fff');
       setIcone(cartao.icone || '💳');
       setIconeImagem(cartao.iconeImagem || '');
+      setNumero(cartao.numero || '');
+      setLimite(cartao.limite || '');
       setVencimento(cartao.vencimento || 10);
       setFechamento(cartao.fechamento || 5);
     } else if (isOpen) {
       // Novo cartão
       setId('');
       setNome('');
-      setCor('#4d9fff');
       setIcone('💳');
       setIconeImagem('');
+      setNumero('');
+      setLimite('');
       setVencimento(10);
       setFechamento(5);
     }
@@ -55,9 +58,10 @@ export default function CartaoModal({
     onSave({
       id: cartaoId,
       name: nome.trim(),
-      color: cor,
       icone: iconeImagem ? '' : icone,
       iconeImagem: iconeImagem,
+      numero: numero || '',
+      limite: parseFloat(limite) || 0,
       vencimento: parseInt(vencimento) || 10,
       fechamento: parseInt(fechamento) || 5,
     });
@@ -91,29 +95,8 @@ export default function CartaoModal({
         />
       </FormGroup>
 
-      {/* Cor, Vencimento e Fechamento */}
+      {/* Vencimento e Fechamento */}
       <FormRow>
-        <FormGroup label="Cor">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <input
-              type="color"
-              value={cor}
-              onChange={(e) => setCor(e.target.value)}
-              style={{ 
-                width: 60, 
-                height: 40, 
-                border: '1px solid var(--border)', 
-                borderRadius: 'var(--r2)', 
-                padding: 2, 
-                cursor: 'pointer'
-              }}
-            />
-            <span style={{ fontSize: '.8rem', color: 'var(--mid)' }}>
-              {cor}
-            </span>
-          </div>
-        </FormGroup>
-
         <FormGroup label="Vencimento">
           <Input
             type="number"
@@ -135,7 +118,33 @@ export default function CartaoModal({
             style={{ width: 100 }}
           />
         </FormGroup>
+
+        <FormGroup label="Últimos 4 dígitos">
+          <Input
+            type="text"
+            maxLength="4"
+            placeholder="1234"
+            value={numero}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+              setNumero(val);
+            }}
+            style={{ width: 100 }}
+          />
+        </FormGroup>
       </FormRow>
+
+      {/* Limite do Cartão */}
+      <FormGroup label="Limite do Cartão">
+        <Input
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="R$ 0,00"
+          value={limite}
+          onChange={(e) => setLimite(e.target.value)}
+        />
+      </FormGroup>
 
       {/* Ícone */}
       <FormGroup label="Ícone">
@@ -262,22 +271,20 @@ export default function CartaoModal({
         ) : (
           <span style={{ fontSize: '1.5rem' }}>{icone}</span>
         )}
-        <span className="cartao-dot" style={{ 
-          background: cor, 
-          width: 12, 
-          height: 12, 
-          borderRadius: '50%',
-          display: 'inline-block'
-        }}></span>
         <span style={{ fontWeight: 500 }}>
           {nome || 'Nome do Cartão'}
         </span>
         <span style={{ 
           fontSize: '.75rem', 
           color: 'var(--mid)', 
-          marginLeft: 'auto' 
+          marginLeft: 'auto',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center'
         }}>
-          Venc: {vencimento} | Fech: {fechamento}
+          <span>**** {numero || '0000'}</span>
+          {limite > 0 && <span>Limite: {parseFloat(limite).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span>}
+          <span>Fech: {fechamento} | Venc: {vencimento}</span>
         </span>
       </div>
     </Modal>
