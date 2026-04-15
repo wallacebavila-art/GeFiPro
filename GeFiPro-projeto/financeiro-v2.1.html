@@ -1,0 +1,2952 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080c14">
+<title>FinPessoal</title>
+
+<!-- ═══════════════════════════════════════════
+     FONTES
+     Plus Jakarta Sans → interface geral
+     JetBrains Mono    → valores numéricos
+     ══════════════════════════════════════════ -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Chart.js → gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- SheetJS → leitura de arquivos Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════
+   RESET GLOBAL
+   ══════════════════════════════════════════ */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════════════════════════════════════
+   VARIÁVEIS — TEMA ESCURO (padrão)
+   ══════════════════════════════════════════ */
+:root {
+  --bg:      #080c14;
+  --s1:      #0d1220;
+  --s2:      #111828;
+  --s3:      #161f30;
+  --s4:      #1c2638;
+  --border:  #1e2d44;
+  --border2: #253550;
+  --accent:  #00d4aa;
+  --accent2: #00d4aa18;
+  --accent3: #00d4aa08;
+  --gold:    #f5a623;
+  --gold2:   #f5a62318;
+  --red:     #ff4d6d;
+  --red2:    #ff4d6d18;
+  --blue:    #4d9fff;
+  --purple:  #9b72ff;
+  --green:   #00d4aa;
+  --text:    #e8edf5;
+  --mid:     #7a8aaa;
+  --dim:     #3d4d66;
+  --font:    'Plus Jakarta Sans', sans-serif;
+  --mono:    'JetBrains Mono', monospace;
+  --r:       12px;
+  --r2:      8px;
+  --tr:      .18s ease;
+}
+
+/* ═══════════════════════════════════════════
+   VARIÁVEIS — TEMA CLARO
+   Sobrescreve apenas as cores ao aplicar data-theme="light"
+   ══════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:      #f0f4f8;
+  --s1:      #ffffff;
+  --s2:      #f8fafc;
+  --s3:      #eef2f7;
+  --s4:      #e2e8f0;
+  --border:  #dde3ed;
+  --border2: #c8d2e0;
+  --text:    #1a2340;
+  --mid:     #5a6a88;
+  --dim:     #a0aec0;
+}
+
+/* ─── Base ─── */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  overflow: hidden;
+  transition: background var(--tr), color var(--tr);
+}
+button { font-family: var(--font); cursor: pointer; }
+input, select, textarea { font-family: var(--font); }
+
+/* ═══════════════════════════════════════════
+   LAYOUT SHELL
+   ══════════════════════════════════════════ */
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ─── Sidebar (desktop) ─── */
+#sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--s1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: background var(--tr);
+}
+.sb-logo { padding: 18px 18px 14px; border-bottom: 1px solid var(--border); }
+.sb-logo h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: -.5px; }
+.sb-logo h1 span { color: var(--accent); }
+.sb-logo p { font-size: .65rem; color: var(--mid); margin-top: 2px; }
+.sb-nav { flex: 1; padding: 8px; overflow-y: auto; }
+.sb-section { font-size: .56rem; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); padding: 10px 10px 4px; font-weight: 700; }
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--r2); margin-bottom: 2px;
+  border: none; background: none; color: var(--mid);
+  font-size: .8rem; font-weight: 500; width: 100%; text-align: left;
+  transition: var(--tr);
+}
+.sb-item:hover { background: var(--s3); color: var(--text); }
+.sb-item.active { background: var(--accent2); color: var(--accent); font-weight: 700; }
+.sb-item .sb-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+
+/* ─── Main area ─── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); transition: background var(--tr); }
+
+/* ─── Topbar ─── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  padding: 0 16px; height: 50px; flex-shrink: 0;
+  transition: background var(--tr);
+}
+.tb-title { font-size: .92rem; font-weight: 700; }
+
+/* ─── Month tabs ─── */
+.month-tabs-wrap {
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+  transition: background var(--tr);
+}
+.month-tabs-wrap::-webkit-scrollbar { display: none; }
+.month-tabs { display: flex; padding: 0 8px; }
+.m-tab {
+  padding: 9px 13px; border: none; background: none; color: var(--mid);
+  font-family: var(--font); font-size: .72rem; font-weight: 600;
+  cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+  transition: var(--tr); flex-shrink: 0;
+}
+.m-tab:hover { color: var(--text); }
+.m-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── Content area ─── */
+#content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#content::-webkit-scrollbar { width: 4px; }
+#content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ─── Pages ─── */
+.page { display: none; padding: 16px; animation: fadeIn .2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+
+/* ─── Bottom nav (mobile) ─── */
+#bottom-nav { display: none; background: var(--s1); border-top: 1px solid var(--border); height: 58px; flex-shrink: 0; }
+.bn-items { display: flex; height: 100%; }
+.bn-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: none; background: none; color: var(--mid);
+  font-size: .55rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  transition: var(--tr);
+}
+.bn-item.active { color: var(--accent); }
+.bn-item .bn-icon { font-size: 1.2rem; }
+
+/* ─── FAB (mobile) ─── */
+#fab {
+  display: none; position: fixed; bottom: 70px; right: 16px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--accent); border: none; font-size: 1.4rem; color: #000;
+  box-shadow: 0 4px 20px var(--accent)66; z-index: 50; transition: var(--tr);
+}
+#fab:active { transform: scale(.92); }
+
+/* ═══════════════════════════════════════════
+   COMPONENTES REUTILIZÁVEIS
+   ══════════════════════════════════════════ */
+
+/* Card genérico */
+.card { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; transition: background var(--tr); }
+.card-title { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--mid); margin-bottom: 10px; }
+
+/* Grid de cards 2 colunas */
+.sum-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+
+/* Card de métrica */
+.sum-card { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r); padding: 13px; position: relative; overflow: hidden; transition: background var(--tr); }
+.sum-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.sum-card.c-green::after { background: var(--accent); }
+.sum-card.c-red::after   { background: var(--red); }
+.sum-card.c-gold::after  { background: var(--gold); }
+.sum-card.c-blue::after  { background: var(--blue); }
+.sum-card.c-purple::after{ background: var(--purple); }
+.sum-card-label { font-size: .6rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); margin-bottom: 5px; }
+.sum-card-val { font-family: var(--mono); font-size: 1rem; font-weight: 700; }
+.sum-card-val.pos  { color: var(--accent); }
+.sum-card-val.neg  { color: var(--red); }
+.sum-card-val.warn { color: var(--gold); }
+.sum-card-sub { font-size: .62rem; color: var(--mid); margin-top: 3px; }
+
+/* Cabeçalho de seção */
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-hdr h2 { font-size: .88rem; font-weight: 700; }
+.section-hdr h2 span { color: var(--accent); }
+
+/* Botões */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: var(--r2); border: none; font-family: var(--font); font-size: .8rem; font-weight: 600; cursor: pointer; transition: var(--tr); white-space: nowrap; }
+.btn-primary   { background: var(--accent); color: #000; }
+.btn-primary:hover   { filter: brightness(1.1); }
+.btn-secondary { background: var(--s3); border: 1px solid var(--border); color: var(--text); }
+.btn-secondary:hover { border-color: var(--border2); }
+.btn-danger    { background: var(--red2); border: 1px solid var(--red)44; color: var(--red); }
+.btn-danger:hover    { background: var(--red); color: #fff; }
+.btn-ghost     { background: none; border: 1px solid var(--border); color: var(--mid); }
+.btn-ghost:hover     { border-color: var(--border2); color: var(--text); }
+.btn-sm  { padding: 5px 11px; font-size: .74rem; }
+.btn-xs  { padding: 3px 8px; font-size: .68rem; }
+
+/* Botão ícone */
+.btn-icon { background: none; border: 1px solid transparent; color: var(--dim); border-radius: 6px; padding: 4px 7px; font-size: .72rem; transition: var(--tr); cursor: pointer; }
+.btn-icon:hover          { border-color: var(--border2); color: var(--text); background: var(--s3); }
+.btn-icon.del:hover      { border-color: var(--red)44; color: var(--red); background: var(--red2); }
+.btn-icon.dup:hover      { border-color: var(--accent)44; color: var(--accent); background: var(--accent2); }
+
+/* Tags */
+.tag         { font-size: .62rem; background: var(--s3); color: var(--mid); padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.tag.t-active{ background: var(--accent2); color: var(--accent); }
+.tag.t-paused{ background: var(--red2);    color: var(--red); }
+.tag.t-warn  { background: var(--gold2);   color: var(--gold); }
+.tag.t-parc  { background: var(--gold2);   color: var(--gold); font-family: var(--mono); font-size: .65rem; font-weight: 700; }
+.tag.t-recorr{ background: var(--blue)18;  color: var(--blue); }
+
+/* Estado vazio */
+.empty { text-align: center; padding: 36px 16px; }
+.empty-icon { font-size: 2.2rem; opacity: .3; margin-bottom: 8px; }
+.empty p { color: var(--mid); font-size: .82rem; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════
+   PÁGINA CARTÕES — MINI RESUMO (topo)
+   4 cards compactos acima da tabela
+   ══════════════════════════════════════════ */
+.cartao-resumo {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;
+}
+.cr-card {
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 10px 12px; position: relative; overflow: hidden;
+}
+.cr-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.cr-label { font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); margin-bottom: 4px; }
+.cr-val   { font-family: var(--mono); font-size: .88rem; font-weight: 700; }
+
+/* Barra de informações do cartão */
+.cartao-infobar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  justify-content: space-between;
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 11px 14px; margin-bottom: 10px;
+}
+.cartao-total-label { font-size: .62rem; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); }
+.cartao-total-val   { font-family: var(--mono); font-size: 1rem; font-weight: 700; }
+
+/* Comparativo com mês anterior */
+.cartao-comparativo {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .72rem; font-weight: 600; padding: 5px 10px;
+  border-radius: var(--r2); border: 1px solid;
+}
+.cartao-comparativo.mais { background: var(--red2); border-color: var(--red)44; color: var(--red); }
+.cartao-comparativo.menos{ background: var(--accent2); border-color: var(--accent)44; color: var(--accent); }
+.cartao-comparativo.igual{ background: var(--s3); border-color: var(--border); color: var(--mid); }
+
+/* Alerta de parcelamento pesado */
+.parc-warn { display: flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--gold); background: var(--gold2); padding: 5px 10px; border-radius: var(--r2); border: 1px solid var(--gold)44; }
+
+/* Abas de seleção de cartão */
+.cartao-tabs { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.cartao-tabs::-webkit-scrollbar { display: none; }
+.cartao-tab {
+  display: flex; align-items: center; gap: 7px; padding: 7px 13px;
+  border-radius: var(--r); border: 1px solid var(--border); background: var(--s2);
+  color: var(--mid); font-size: .78rem; font-weight: 600; cursor: pointer;
+  transition: var(--tr); flex-shrink: 0;
+}
+.cartao-tab:hover  { border-color: var(--border2); color: var(--text); }
+.cartao-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent2); }
+.cartao-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Barra de filtro e busca */
+.filtro-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 8px 12px; margin-bottom: 10px;
+}
+.filtro-bar input {
+  flex: 1; min-width: 120px; background: var(--s3); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 6px 10px; color: var(--text); font-family: var(--font);
+  font-size: .8rem; outline: none; transition: var(--tr);
+}
+.filtro-bar input:focus { border-color: var(--accent); }
+.filtro-bar select {
+  background: var(--s3); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r2); padding: 6px 8px; font-family: var(--font); font-size: .78rem;
+  outline: none; cursor: pointer; transition: var(--tr);
+}
+.filtro-bar select:focus { border-color: var(--accent); }
+.filtro-bar select option { background: var(--s3); }
+.filtro-count { font-size: .7rem; color: var(--mid); white-space: nowrap; }
+
+/* Tabela de gastos (desktop) */
+.expense-table { width: 100%; border-collapse: collapse; }
+.expense-table th {
+  font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--dim); padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid var(--border); background: var(--s2);
+  white-space: nowrap; user-select: none;
+}
+/* Cabeçalho ordenável — mostra cursor de ponteiro */
+.expense-table th.sortable { cursor: pointer; transition: var(--tr); }
+.expense-table th.sortable:hover { color: var(--text); }
+/* Indicador de ordenação ativa */
+.expense-table th .sort-icon { margin-left: 4px; font-size: .65rem; color: var(--accent); }
+.expense-table td {
+  padding: 9px 10px; border-bottom: 1px solid var(--border);
+  font-size: .82rem; vertical-align: middle;
+  background: var(--s2); transition: background var(--tr);
+}
+.expense-table tr:last-child td { border-bottom: none; }
+.expense-table tr:hover td { background: var(--s3); }
+.td-val  { font-family: var(--mono); font-weight: 600; color: var(--red); white-space: nowrap; }
+.td-date { font-family: var(--mono); font-size: .74rem; color: var(--mid); }
+.td-actions { display: flex; gap: 3px; justify-content: flex-end; }
+/* Campo de notas inline (exibido abaixo do nome na célula) */
+.td-nota { font-size: .68rem; color: var(--mid); font-style: italic; margin-top: 2px; }
+
+/* Cards de gastos (mobile) */
+.expense-cards { display: none; flex-direction: column; gap: 8px; }
+.exp-card {
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 12px 13px; display: flex; align-items: flex-start; gap: 11px;
+  cursor: pointer; transition: var(--tr);
+}
+.exp-card:active { background: var(--s3); }
+.exp-card-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.exp-card-body { flex: 1; min-width: 0; }
+.exp-card-desc { font-size: .83rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-card-nota { font-size: .7rem; color: var(--mid); font-style: italic; margin-top: 2px; }
+.exp-card-sub  { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+.exp-card-right{ text-align: right; flex-shrink: 0; }
+.exp-card-val  { font-family: var(--mono); font-size: .88rem; font-weight: 700; color: var(--red); }
+.exp-card-date { font-family: var(--mono); font-size: .64rem; color: var(--mid); margin-top: 2px; }
+
+/* Rodapé da tabela */
+.table-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 10px; background: var(--s1); border-top: 2px solid var(--border);
+  border-radius: 0 0 var(--r) var(--r);
+}
+.table-footer span { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); }
+.table-footer strong { font-family: var(--mono); font-size: .88rem; color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   PÁGINA DÉBITOS FIXOS
+   ══════════════════════════════════════════ */
+
+/* Card de total dos débitos no topo */
+.debitos-total-card {
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px; margin-bottom: 14px;
+}
+.debitos-total-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.debitos-total-val { font-family: var(--mono); font-size: 1.3rem; font-weight: 800; color: var(--red); }
+.debitos-breakdown { display: flex; flex-wrap: wrap; gap: 6px; }
+.debitos-break-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .72rem; color: var(--mid);
+  background: var(--s3); padding: 3px 9px; border-radius: 99px;
+}
+.debitos-break-dot { width: 7px; height: 7px; border-radius: 50%; }
+.debitos-break-val { font-family: var(--mono); font-weight: 600; color: var(--text); margin-left: 2px; }
+
+/* Seção "Próximos vencimentos" */
+.proximos-wrap { margin-bottom: 14px; }
+.proximos-title {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.proximo-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; background: var(--gold2); border: 1px solid var(--gold)33;
+  border-radius: var(--r2); margin-bottom: 5px;
+}
+.proximo-nome { font-size: .82rem; font-weight: 600; }
+.proximo-dia  { font-size: .72rem; color: var(--gold); font-family: var(--mono); font-weight: 700; }
+.proximo-val  { font-family: var(--mono); font-size: .82rem; color: var(--red); font-weight: 600; }
+
+/* Item de débito */
+.debito-item {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 12px 13px; margin-bottom: 8px; transition: var(--tr);
+}
+.debito-item:hover { border-color: var(--border2); }
+.debito-item.pausado   { opacity: .5; }
+.debito-item.encerrado { opacity: .4; }
+.debito-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.debito-body { flex: 1; min-width: 0; }
+.debito-name { font-size: .85rem; font-weight: 600; }
+.debito-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+/* Projeção de encerramento */
+.debito-projecao { font-size: .68rem; color: var(--mid); margin-top: 3px; }
+/* Reajuste rápido do valor — input inline */
+.debito-val-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.debito-val { font-family: var(--mono); font-size: .9rem; font-weight: 700; color: var(--red); }
+.debito-val-input {
+  font-family: var(--mono); font-size: .88rem; font-weight: 700; color: var(--red);
+  background: var(--s3); border: 1px solid var(--accent); border-radius: 5px;
+  padding: 3px 7px; width: 100px; outline: none; display: none;
+}
+.debito-val-input.show { display: block; }
+.debito-actions { display: flex; gap: 3px; flex-shrink: 0; }
+/* Badge de pago/não pago no mês */
+.badge-pago     { font-size: .62rem; padding: 2px 8px; border-radius: 99px; white-space: nowrap; font-weight: 700; cursor: pointer; transition: var(--tr); }
+.badge-pago.sim { background: var(--accent2); color: var(--accent); border: 1px solid var(--accent)44; }
+.badge-pago.nao { background: var(--s3); color: var(--dim); border: 1px solid var(--border); }
+.badge-pago:hover { filter: brightness(1.2); }
+
+/* Header seção Bob */
+.bob-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 13px; background: linear-gradient(135deg, var(--gold2), transparent);
+  border: 1px solid var(--gold)33; border-radius: var(--r); margin-bottom: 10px;
+}
+.bob-emoji { font-size: 1.4rem; }
+.bob-info h3 { font-size: .87rem; font-weight: 700; }
+.bob-info p  { font-size: .67rem; color: var(--mid); }
+.bob-total   { margin-left: auto; font-family: var(--mono); font-size: .88rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+/* Breakdown visual do Bob */
+.bob-breakdown { display: flex; flex-direction: column; gap: 4px; padding: 0 2px 8px; }
+.bob-break-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 12px; background: var(--s3); border-radius: var(--r2); }
+.bob-break-name { font-size: .78rem; display: flex; align-items: center; gap: 6px; }
+.bob-break-val  { font-family: var(--mono); font-size: .78rem; color: var(--red); font-weight: 600; }
+
+/* ═══════════════════════════════════════════
+   PÁGINA DASHBOARD
+   ══════════════════════════════════════════ */
+.health-card {
+  background: linear-gradient(135deg, var(--s2), var(--s3));
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 15px; margin-bottom: 14px;
+}
+.health-top { display: flex; align-items: center; gap: 13px; margin-bottom: 10px; }
+.health-score {
+  width: 54px; height: 54px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 1.1rem; font-weight: 700; flex-shrink: 0; border: 3px solid;
+}
+.health-info h3 { font-size: .9rem; font-weight: 700; margin-bottom: 3px; }
+.health-info p  { font-size: .72rem; color: var(--mid); }
+.health-bar-wrap { background: var(--s4); border-radius: 99px; height: 7px; overflow: hidden; }
+.health-bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+/* Seletor de período */
+.period-selector { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.period-selector select {
+  background: var(--s2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r2); padding: 6px 10px; font-family: var(--font); font-size: .8rem; outline: none; cursor: pointer;
+}
+.period-selector select:focus { border-color: var(--accent); }
+.period-selector select option { background: var(--s2); }
+
+/* Grade de widgets */
+#dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
+.dash-widget { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; min-height: 200px; transition: border-color var(--tr); }
+.dash-widget:hover { border-color: var(--border2); }
+.dash-widget.full-width { grid-column: 1 / -1; }
+.widget-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); user-select: none; }
+.widget-title  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); }
+.widget-actions{ display: flex; gap: 3px; }
+.widget-btn    { background: none; border: none; color: var(--dim); cursor: pointer; padding: 2px 6px; border-radius: 4px; font-size: .7rem; transition: var(--tr); }
+.widget-btn:hover { background: var(--s3); color: var(--text); }
+.widget-body   { padding: 12px; }
+.widget-chart-wrap { position: relative; width: 100%; min-height: 160px; }
+
+/* Parcelamentos no dashboard */
+.parc-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.parc-item:last-child { border-bottom: none; }
+.parc-name  { font-size: .82rem; font-weight: 600; }
+.parc-sub   { font-size: .67rem; color: var(--mid); margin-top: 2px; }
+.parc-badge { background: var(--gold2); color: var(--gold); font-family: var(--mono); font-size: .67rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.parc-val   { font-family: var(--mono); font-size: .8rem; font-weight: 600; color: var(--red); text-align: right; }
+
+/* ═══════════════════════════════════════════
+   PÁGINA CONFIGURAÇÕES
+   ══════════════════════════════════════════ */
+.config-section { background: var(--s2); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+.config-section-title { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: .78rem; font-weight: 700; }
+.config-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); gap: 10px; }
+.config-row:last-child { border-bottom: none; }
+.config-row-label { font-size: .82rem; font-weight: 500; }
+.config-row-sub   { font-size: .68rem; color: var(--mid); margin-top: 2px; }
+.config-row-right { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+
+/* Toggle switch (tema, etc) */
+.toggle-switch { position: relative; width: 42px; height: 23px; flex-shrink: 0; cursor: pointer; display: inline-block; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track  { display: block; width: 42px; height: 23px; background: var(--s4); border-radius: 99px; transition: .2s; border: 1px solid var(--border); }
+.toggle-switch input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
+.toggle-thumb  { position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; transition: .2s; pointer-events: none; }
+.toggle-switch input:checked ~ .toggle-thumb { left: 22px; }
+
+/* Estatísticas Firebase */
+.stat-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { font-size: .78rem; color: var(--mid); }
+.stat-val   { font-family: var(--mono); font-size: .8rem; font-weight: 600; }
+.stat-val.ok      { color: var(--accent); }
+.stat-val.offline { color: var(--red); }
+
+/* Lista de categorias */
+.cat-list { padding: 10px 14px; }
+.cat-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.cat-item:last-child { border-bottom: none; }
+.cat-color-dot  { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--border2); }
+.cat-item-name  { flex: 1; font-size: .82rem; font-weight: 500; }
+.cat-item-system{ font-size: .62rem; color: var(--dim); }
+
+/* Gemini Chat */
+.gemini-chat { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding: 12px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.chat-msg      { display: flex; gap: 8px; animation: fadeIn .2s ease; }
+.chat-msg.user { flex-direction: row-reverse; }
+.chat-bubble   { max-width: 80%; padding: 9px 12px; border-radius: 12px; font-size: .82rem; line-height: 1.5; }
+.chat-msg.ai   .chat-bubble { background: var(--s3); border: 1px solid var(--border); border-top-left-radius: 3px; }
+.chat-msg.user .chat-bubble { background: var(--accent2); border: 1px solid var(--accent)44; border-top-right-radius: 3px; }
+.chat-avatar   { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; flex-shrink: 0; background: var(--s3); border: 1px solid var(--border); }
+.chat-input-row{ display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
+.chat-input-row input { flex: 1; background: var(--s3); border: 1px solid var(--border); border-radius: var(--r2); padding: 8px 11px; color: var(--text); font-family: var(--font); font-size: .83rem; outline: none; }
+.chat-input-row input:focus { border-color: var(--accent); }
+
+/* Sugestão Gemini */
+.gemini-suggestion { display: none; align-items: center; gap: 8px; padding: 7px 10px; background: var(--accent3); border: 1px solid var(--accent)22; border-radius: var(--r2); margin-top: 6px; font-size: .76rem; color: var(--mid); cursor: pointer; transition: var(--tr); }
+.gemini-suggestion.show  { display: flex; }
+.gemini-suggestion:hover { background: var(--accent2); color: var(--accent); }
+
+/* Import preview */
+.import-preview { max-height: 200px; overflow-y: auto; background: var(--s3); border: 1px solid var(--border); border-radius: var(--r2); margin-bottom: 12px; }
+.import-row { display: flex; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: .76rem; }
+.import-row:last-child { border-bottom: none; }
+.import-row.header { font-weight: 700; color: var(--mid); background: var(--s4); font-size: .65rem; text-transform: uppercase; }
+
+/* ═══════════════════════════════════════════
+   MODAIS
+   ══════════════════════════════════════════ */
+.modal-ov { display: none; position: fixed; inset: 0; background: #00000088; z-index: 200; align-items: flex-end; justify-content: center; }
+.modal-ov.open { display: flex; }
+@media (min-width: 640px) { .modal-ov { align-items: center; padding: 16px; } }
+.modal-box { background: var(--s2); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; animation: slideUp .22s ease; transition: background var(--tr); }
+@media (min-width: 640px) { .modal-box { border-radius: var(--r); } }
+@keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 12px auto 0; }
+.modal-hdr { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 11px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: .9rem; }
+.modal-hdr button { background: none; border: none; color: var(--mid); font-size: .9rem; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+.modal-hdr button:hover { color: var(--text); background: var(--s3); }
+.modal-body { padding: 16px; }
+.modal-footer { padding: 0 16px 16px; display: flex; gap: 8px; }
+.modal-footer .btn { flex: 1; justify-content: center; }
+
+/* Campos de formulário */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--mid); margin-bottom: 5px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%; background: var(--s3); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 9px 11px; color: var(--text); font-family: var(--font); font-size: .88rem;
+  outline: none; transition: var(--tr);
+}
+.form-group textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group select option { background: var(--s3); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Seletor de tipo de gasto */
+.tipo-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.tipo-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 6px; border-radius: var(--r2); border: 1px solid var(--border); background: var(--s3); cursor: pointer; transition: var(--tr); font-size: .7rem; text-align: center; color: var(--mid); font-weight: 500; }
+.tipo-opt:hover  { border-color: var(--border2); color: var(--text); }
+.tipo-opt.active { border-color: var(--accent); background: var(--accent2); color: var(--accent); font-weight: 700; }
+.tipo-opt .tipo-icon { font-size: 1.2rem; }
+
+/* Bloco de informação */
+.info-block { font-size: .72rem; color: var(--mid); padding: 8px 10px; background: var(--accent3); border: 1px solid var(--accent)22; border-radius: var(--r2); margin-bottom: 12px; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════
+   TOAST E LOADING
+   ══════════════════════════════════════════ */
+#toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--s2); border: 1px solid var(--border2); border-radius: var(--r2); padding: 8px 16px; font-size: .8rem; z-index: 500; opacity: 0; transition: .22s; pointer-events: none; white-space: nowrap; }
+#toast.show  { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.ok    { border-color: var(--accent); color: var(--accent); }
+#toast.err   { border-color: var(--red);    color: var(--red); }
+#toast.warn  { border-color: var(--gold);   color: var(--gold); }
+#loading { display: none; position: fixed; inset: 0; background: #00000090; z-index: 600; align-items: center; justify-content: center; }
+#loading.on { display: flex; }
+.spinner { width: 34px; height: 34px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVO — MOBILE
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  #sidebar    { display: none; }
+  #bottom-nav { display: block; }
+  #fab        { display: flex; align-items: center; justify-content: center; }
+  .page       { padding: 12px; }
+  .expense-table  { display: none; }
+  .expense-cards  { display: flex; }
+  #dashboard-grid { grid-template-columns: 1fr; }
+  .cartao-resumo  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .cartao-resumo { grid-template-columns: repeat(2, 1fr); }
+  .tipo-selector { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════
+       SIDEBAR — menu lateral (desktop)
+       ══════════════════════════════════════ -->
+  <nav id="sidebar">
+    <div class="sb-logo">
+      <h1>💰 Fin<span>Pessoal</span></h1>
+      <p id="sb-month-label">—</p>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section">Principal</div>
+      <button class="sb-item active" data-page="cartoes"   onclick="navTo('cartoes')">
+        <span class="sb-icon">💳</span> Cartões
+      </button>
+      <button class="sb-item" data-page="debitos"   onclick="navTo('debitos')">
+        <span class="sb-icon">📋</span> Débitos Fixos
+      </button>
+      <div class="sb-section">Análise</div>
+      <button class="sb-item" data-page="dashboard" onclick="navTo('dashboard')">
+        <span class="sb-icon">📊</span> Dashboard
+      </button>
+      <div class="sb-section">Sistema</div>
+      <button class="sb-item" data-page="config"    onclick="navTo('config')">
+        <span class="sb-icon">⚙️</span> Configurações
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       MAIN — área central
+       ══════════════════════════════════════ -->
+  <div id="main">
+
+    <!-- Topbar — apenas título da página atual -->
+    <div id="topbar">
+      <span class="tb-title" id="topbar-title">Cartões</span>
+    </div>
+
+    <!-- Abas de meses (Jan–Dez) -->
+    <div class="month-tabs-wrap" id="month-tabs-wrap">
+      <div class="month-tabs" id="month-tabs"></div>
+    </div>
+
+    <!-- Conteúdo das páginas -->
+    <div id="content">
+
+      <!-- ════════════════════════════════════
+           PÁGINA: CARTÕES
+           ════════════════════════════════════ -->
+      <div id="page-cartoes" class="page active">
+
+        <!-- Abas de seleção de cartão -->
+        <div class="cartao-tabs" id="cartao-tabs"></div>
+
+        <!-- Mini-resumo visual do cartão selecionado -->
+        <div class="cartao-resumo" id="cartao-resumo"></div>
+
+        <!-- Barra de info: total, comparativo, alerta, botão adicionar -->
+        <div class="cartao-infobar" id="cartao-infobar">
+          <div>
+            <div class="cartao-total-label">Total do Cartão</div>
+            <div class="cartao-total-val" id="cartao-total-val">R$ 0,00</div>
+          </div>
+          <div id="cartao-comparativo"></div>
+          <div id="parc-warn" class="parc-warn" style="display:none">⚠ Parcelas acima do limite</div>
+          <button class="btn btn-primary btn-sm" onclick="openGastoModal()">＋ Adicionar</button>
+        </div>
+
+        <!-- Filtro e busca -->
+        <div class="filtro-bar">
+          <input id="filtro-busca" type="text" placeholder="🔍 Buscar por descrição..." oninput="aplicarFiltro()">
+          <select id="filtro-cat"  onchange="aplicarFiltro()"><option value="">Todas categorias</option></select>
+          <select id="filtro-tipo" onchange="aplicarFiltro()">
+            <option value="">Todos os tipos</option>
+            <option value="normal">Normal</option>
+            <option value="parcelado">Parcelado</option>
+            <option value="recorrente">Recorrente</option>
+          </select>
+          <span class="filtro-count" id="filtro-count"></span>
+        </div>
+
+        <!-- Tabela desktop + cards mobile -->
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="expense-table">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortBy('data')">Data <span class="sort-icon" id="sort-data"></span></th>
+                <th class="sortable" onclick="sortBy('descricao')">Descrição <span class="sort-icon" id="sort-descricao"></span></th>
+                <th class="sortable" onclick="sortBy('categoria')">Categoria <span class="sort-icon" id="sort-categoria"></span></th>
+                <th>Tipo</th>
+                <th class="sortable" onclick="sortBy('valor')">Valor <span class="sort-icon" id="sort-valor"></span></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expense-tbody"></tbody>
+          </table>
+          <div class="expense-cards" id="expense-cards"></div>
+          <div class="table-footer">
+            <span id="table-count">0 lançamentos</span>
+            <strong id="table-total">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════
+           PÁGINA: DÉBITOS FIXOS
+           ════════════════════════════════════ -->
+      <div id="page-debitos" class="page">
+
+        <!-- Card de total mensal com breakdown por categoria -->
+        <div class="debitos-total-card" id="debitos-total-card"></div>
+
+        <!-- Próximos vencimentos (7 dias) -->
+        <div class="proximos-wrap" id="proximos-wrap" style="display:none">
+          <div class="proximos-title">⚠ Próximos Vencimentos</div>
+          <div id="proximos-list"></div>
+        </div>
+
+        <!-- Lista de débitos normais -->
+        <div class="section-hdr">
+          <h2>Débitos <span>Fixos</span></h2>
+          <button class="btn btn-primary btn-sm" onclick="openDebitoModal()">＋ Adicionar</button>
+        </div>
+        <div id="debitos-list"></div>
+
+        <!-- Seção do Bob -->
+        <div style="margin-top:20px">
+          <div class="bob-header">
+            <span class="bob-emoji">🐕</span>
+            <div class="bob-info">
+              <h3>Gastos do Bob</h3>
+              <p>Despesas fixas do pet</p>
+            </div>
+            <span class="bob-total" id="bob-total">R$ 0,00</span>
+          </div>
+          <!-- Breakdown visual dos itens do Bob -->
+          <div class="bob-breakdown" id="bob-breakdown"></div>
+          <div id="bob-list"></div>
+          <button class="btn btn-ghost btn-sm" onclick="openDebitoModal('bob')"
+            style="width:100%;justify-content:center;margin-top:4px">
+            ＋ Adicionar gasto do Bob
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════
+           PÁGINA: DASHBOARD
+           ════════════════════════════════════ -->
+      <div id="page-dashboard" class="page">
+        <!-- Seletor de período -->
+        <div class="period-selector">
+          <select id="dash-ano" onchange="onDashPeriodChange()"></select>
+          <select id="dash-mes" onchange="onDashPeriodChange()"></select>
+          <button class="btn btn-ghost btn-sm" onclick="addDashWidget()">＋ Nova Janela</button>
+        </div>
+        <!-- Card de saúde financeira -->
+        <div class="health-card">
+          <div class="health-top">
+            <div class="health-score" id="health-score">—</div>
+            <div class="health-info">
+              <h3>Saúde Financeira</h3>
+              <p id="health-desc">Calculando...</p>
+            </div>
+          </div>
+          <div class="health-bar-wrap">
+            <div class="health-bar-fill" id="health-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <!-- Cards de métricas -->
+        <div class="sum-grid" id="dash-cards"></div>
+        <!-- Janelas de gráficos configuráveis -->
+        <div id="dashboard-grid"></div>
+        <!-- Parcelamentos ativos -->
+        <div class="card">
+          <div class="card-title">Parcelamentos Ativos</div>
+          <div id="parc-ativos-list"></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════
+           PÁGINA: CONFIGURAÇÕES
+           ════════════════════════════════════ -->
+      <div id="page-config" class="page">
+        <div class="section-hdr"><h2>⚙️ <span>Configurações</span></h2></div>
+
+        <!-- Perfil financeiro -->
+        <div class="config-section">
+          <div class="config-section-title">💰 Perfil Financeiro</div>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Renda Mensal</div>
+              <div class="config-row-sub">Base de cálculo dos percentuais</div>
+            </div>
+            <div class="config-row-right">
+              <input id="cfg-renda" type="number" step="0.01" placeholder="0,00"
+                style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;width:130px;"
+                onchange="saveConfig('renda', this.value)">
+            </div>
+          </div>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Limite de Alerta de Parcelas</div>
+              <div class="config-row-sub">% da renda (padrão 30%)</div>
+            </div>
+            <div class="config-row-right">
+              <input id="cfg-limite" type="number" min="1" max="100" placeholder="30"
+                style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:6px 10px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;width:70px;"
+                onchange="saveConfig('limiteParcPct', this.value / 100)">
+              <span style="font-size:.82rem;color:var(--mid)">%</span>
+            </div>
+          </div>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Gemini API Key</div>
+              <div class="config-row-sub">Para o assistente inteligente</div>
+            </div>
+            <div class="config-row-right">
+              <input id="cfg-gemini-key" type="password" placeholder="AIza..."
+                style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:.78rem;outline:none;width:160px;"
+                onchange="saveGeminiKey(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Aparência / Tema -->
+        <div class="config-section">
+          <div class="config-section-title">🎨 Aparência</div>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Tema Escuro</div>
+              <div class="config-row-sub">Alternar entre escuro e claro</div>
+            </div>
+            <div class="config-row-right">
+              <!-- onchange em vez de onclick — corrige o bug de duplo disparo -->
+              <label class="toggle-switch">
+                <input type="checkbox" id="cfg-tema" checked onchange="toggleTheme()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categorias personalizadas -->
+        <div class="config-section">
+          <div class="config-section-title">🏷️ Categorias de Gastos</div>
+          <div class="cat-list" id="cat-list"></div>
+          <div style="padding:10px 14px;display:flex;gap:8px">
+            <input id="nova-cat-nome" type="text" placeholder="Nome da categoria"
+              style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:8px 10px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;">
+            <input id="nova-cat-cor" type="color" value="#00d4aa"
+              style="width:38px;height:38px;border:1px solid var(--border);border-radius:var(--r2);background:var(--s3);cursor:pointer;padding:3px;">
+            <button class="btn btn-primary btn-sm" onclick="adicionarCategoria()">＋</button>
+          </div>
+        </div>
+
+        <!-- Importar planilha -->
+        <div class="config-section">
+          <div class="config-section-title">📥 Importar Planilha Excel</div>
+          <div style="padding:14px">
+            <p style="font-size:.78rem;color:var(--mid);margin-bottom:10px;line-height:1.5">
+              Faça upload do seu arquivo .xlsx. A plataforma identificará as colunas e importará os gastos.
+            </p>
+            <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this)">
+            <button class="btn btn-secondary" onclick="$('import-file').click()">📂 Selecionar arquivo .xlsx</button>
+          </div>
+        </div>
+
+        <!-- Firebase -->
+        <div class="config-section">
+          <div class="config-section-title">🔥 Firebase & Sincronização</div>
+          <div class="stat-row"><span class="stat-label">Status da conexão</span><span class="stat-val" id="fb-status">Verificando...</span></div>
+          <div class="stat-row"><span class="stat-label">Última sincronização</span><span class="stat-val" id="fb-sync">—</span></div>
+          <div class="stat-row"><span class="stat-label">Leituras (sessão)</span><span class="stat-val ok" id="fb-reads">0</span></div>
+          <div class="stat-row"><span class="stat-label">Escritas (sessão)</span><span class="stat-val ok" id="fb-writes">0</span></div>
+          <div class="stat-row"><span class="stat-label">Registros no banco</span><span class="stat-val" id="fb-records">—</span></div>
+          <div style="padding:12px 14px">
+            <button class="btn btn-secondary btn-sm" onclick="forcSync()">🔄 Forçar sincronização</button>
+          </div>
+        </div>
+
+        <!-- Assistente Gemini -->
+        <div class="config-section">
+          <div class="config-section-title">🤖 Assistente Financeiro (Gemini)</div>
+          <div class="gemini-chat" id="gemini-chat">
+            <div class="chat-msg ai">
+              <div class="chat-avatar">🤖</div>
+              <div class="chat-bubble">Olá! Sou seu assistente financeiro. Configure sua API Key acima para começar!</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input id="chat-input" type="text" placeholder="Ex: Quanto gastei em Alimentação este mês?" onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-primary btn-sm" onclick="sendChat()">Enviar</button>
+          </div>
+        </div>
+
+        <!-- Sobre -->
+        <div class="config-section">
+          <div class="config-section-title">ℹ️ Sobre</div>
+          <div class="stat-row"><span class="stat-label">Versão</span><span class="stat-val">2.1.0</span></div>
+          <div class="stat-row"><span class="stat-label">Firebase Project</span><span class="stat-val" style="font-size:.7rem">financeiro-pessoal-4a6f9</span></div>
+        </div>
+      </div>
+
+    </div><!-- #content -->
+
+    <!-- Bottom nav (mobile) -->
+    <nav id="bottom-nav">
+      <div class="bn-items">
+        <button class="bn-item active" data-page="cartoes"   onclick="navTo('cartoes')">
+          <span class="bn-icon">💳</span>Cartões
+        </button>
+        <button class="bn-item" data-page="debitos"   onclick="navTo('debitos')">
+          <span class="bn-icon">📋</span>Fixos
+        </button>
+        <button class="bn-item" data-page="dashboard" onclick="navTo('dashboard')">
+          <span class="bn-icon">📊</span>Dashboard
+        </button>
+        <button class="bn-item" data-page="config"    onclick="navTo('config')">
+          <span class="bn-icon">⚙️</span>Config
+        </button>
+      </div>
+    </nav>
+  </div><!-- #main -->
+</div><!-- #app -->
+
+<!-- FAB (mobile) -->
+<button id="fab" onclick="fabAction()">＋</button>
+
+<!-- ════════════════════════════════════════
+     MODAL: ADICIONAR / EDITAR GASTO
+     ═══════════════════════════════════════ -->
+<div id="modal-gasto" class="modal-ov" onclick="if(event.target===this)closeModal('modal-gasto')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <span id="modal-gasto-title">＋ Novo Gasto</span>
+      <button onclick="closeModal('modal-gasto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- ID oculto para modo edição -->
+      <input type="hidden" id="g-id">
+
+      <!-- Seletor do tipo de gasto -->
+      <div class="form-group">
+        <label>Tipo de Gasto</label>
+        <div class="tipo-selector">
+          <div class="tipo-opt active" id="tipo-normal"    onclick="selectTipo('normal')">
+            <span class="tipo-icon">💳</span>Normal
+          </div>
+          <div class="tipo-opt" id="tipo-parcelado"  onclick="selectTipo('parcelado')">
+            <span class="tipo-icon">📅</span>Parcelado
+          </div>
+          <div class="tipo-opt" id="tipo-recorrente" onclick="selectTipo('recorrente')">
+            <span class="tipo-icon">🔄</span>Recorrente
+          </div>
+        </div>
+      </div>
+
+      <!-- Valor e data -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor (R$) *</label>
+          <input id="g-valor" type="number" step="0.01" min="0" placeholder="0,00" inputmode="decimal" oninput="onGastoDescInput()">
+        </div>
+        <div class="form-group">
+          <label>Data *</label>
+          <input id="g-data" type="date">
+        </div>
+      </div>
+
+      <!-- Seletor de mês destino (somente ao editar) -->
+      <div id="g-destino-wrap" class="form-row" style="display:none">
+        <div class="form-group">
+          <label>Mês de Destino</label>
+          <select id="g-mes-dest"></select>
+        </div>
+        <div class="form-group">
+          <label>Ano de Destino</label>
+          <select id="g-ano-dest"></select>
+        </div>
+      </div>
+
+      <!-- Descrição + sugestão Gemini -->
+      <div class="form-group">
+        <label>Descrição *</label>
+        <input id="g-desc" type="text" placeholder="Ex: Mercado Extra" oninput="onGastoDescInput()">
+      </div>
+      <div class="gemini-suggestion" id="gemini-sug" onclick="applyGeminiSuggestion()">
+        <span style="color:var(--accent)">✨</span>
+        <span id="gemini-sug-text">Sugerir categoria</span>
+      </div>
+
+      <!-- Categoria -->
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="g-cat"></select>
+      </div>
+
+      <!-- Cartão destino (somente ao editar) -->
+      <div class="form-group" id="g-cartao-wrap" style="display:none">
+        <label>Cartão</label>
+        <select id="g-cartao-sel"></select>
+      </div>
+
+      <!-- Campo de notas (opcional) -->
+      <div class="form-group">
+        <label>Notas (opcional)</label>
+        <textarea id="g-notas" placeholder="Ex: presente aniversário da Manu..."></textarea>
+      </div>
+
+      <!-- Campos de parcelamento -->
+      <div id="g-parc-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Parcela Inicial</label>
+            <input id="g-parc-ini" type="number" min="1" value="1" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>Total de Parcelas</label>
+            <input id="g-parc-tot" type="number" min="2" value="6" inputmode="numeric">
+          </div>
+        </div>
+        <div class="info-block">✦ As parcelas seguintes são criadas automaticamente nos meses seguintes do Firebase.</div>
+      </div>
+
+      <!-- Info tipo recorrente -->
+      <div id="g-recorr-info" class="info-block" style="display:none">
+        🔄 Gasto recorrente — valor fixo mensal sem data de encerramento.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-del-gasto" style="display:none" onclick="deletarGasto($('g-id').value)">Deletar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-gasto" onclick="salvarGasto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL: DÉBITO FIXO
+     ═══════════════════════════════════════ -->
+<div id="modal-debito" class="modal-ov" onclick="if(event.target===this)closeModal('modal-debito')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <span id="modal-debito-title">＋ Novo Débito Fixo</span>
+      <button onclick="closeModal('modal-debito')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="d-id">
+      <input type="hidden" id="d-tipo-pet" value="normal">
+      <div class="form-group">
+        <label>Nome *</label>
+        <input id="d-nome" type="text" placeholder="Ex: Financiamento Carro">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor (R$) *</label>
+          <input id="d-valor" type="number" step="0.01" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Dia de Vencimento</label>
+          <input id="d-dia" type="number" min="1" max="31" inputmode="numeric" placeholder="Ex: 10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="d-cat"><option value="">Selecionar...</option></select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="d-status">
+          <option value="ativo">Ativo</option>
+          <option value="pausado">Pausado</option>
+          <option value="encerrado">Encerrado</option>
+        </select>
+      </div>
+      <!-- Até quando este débito ocorrerá -->
+      <div class="form-group">
+        <label>Até Quando?</label>
+        <select id="d-ate-tipo" onchange="toggleDebitoAte()">
+          <option value="indefinido">Indefinido (sem data de fim)</option>
+          <option value="definido">Data definida de encerramento</option>
+        </select>
+      </div>
+      <div id="d-ate-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Mês de Encerramento</label>
+            <select id="d-ate-mes"></select>
+          </div>
+          <div class="form-group">
+            <label>Ano de Encerramento</label>
+            <select id="d-ate-ano"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-del-debito" style="display:none" onclick="deletarDebito($('d-id').value)">Deletar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-debito')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDebito()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL: CONFIGURAR WIDGET DO DASHBOARD
+     ═══════════════════════════════════════ -->
+<div id="modal-widget" class="modal-ov" onclick="if(event.target===this)closeModal('modal-widget')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr"><span>⚙ Configurar Gráfico</span><button onclick="closeModal('modal-widget')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="w-id">
+      <div class="form-group">
+        <label>Título da Janela</label>
+        <input id="w-titulo" type="text" placeholder="Ex: Gastos por Categoria">
+      </div>
+      <div class="form-group">
+        <label>Tipo de Gráfico</label>
+        <select id="w-tipo">
+          <option value="pizza">🍕 Pizza (Doughnut)</option>
+          <option value="barras">📊 Barras Verticais</option>
+          <option value="barras-h">📉 Barras Horizontais</option>
+          <option value="linha">📈 Linha</option>
+          <option value="historico">📅 Histórico 6 Meses</option>
+          <option value="parcelas">🔗 Parcelamentos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Largura</label>
+        <select id="w-largura">
+          <option value="half">Metade (50%)</option>
+          <option value="full">Completo (100%)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Altura (px)</label>
+        <input id="w-altura" type="number" min="150" max="600" step="50" value="220">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="removerWidget($('w-id').value)">Remover</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-widget')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarWidget()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL: IMPORTAÇÃO DE PLANILHA
+     ═══════════════════════════════════════ -->
+<div id="modal-import" class="modal-ov" onclick="if(event.target===this)closeModal('modal-import')">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr"><span>📥 Importar Planilha</span><button onclick="closeModal('modal-import')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.8rem;color:var(--mid);margin-bottom:12px">Confirme os dados antes de importar.</p>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="margin:0">
+          <label>Cartão Destino</label>
+          <select id="import-cartao"></select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Mês / Ano Destino</label>
+          <select id="import-mes-ano"></select>
+        </div>
+      </div>
+      <div class="import-preview" id="import-preview"></div>
+      <p style="font-size:.72rem;color:var(--mid)" id="import-count">—</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-import')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarImport()">✓ Importar Todos</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT PRINCIPAL
+     ═══════════════════════════════════════ -->
+<script type="module">
+
+// ─── Imports Firebase SDK ───────────────────────────────────────────────────
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getDatabase, ref, set, get, push, remove, update, onValue }
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+
+// ─── Inicialização do Firebase ──────────────────────────────────────────────
+const DB = getDatabase(initializeApp({
+  apiKey:            "AIzaSyA8wQazUOpj0GI0qLLZ9Sir0wgVtgEhzT4",
+  authDomain:        "financeiro-pessoal-4a6f9.firebaseapp.com",
+  databaseURL:       "https://financeiro-pessoal-4a6f9-default-rtdb.firebaseio.com",
+  projectId:         "financeiro-pessoal-4a6f9",
+  storageBucket:     "financeiro-pessoal-4a6f9.firebasestorage.app",
+  messagingSenderId: "90268413844",
+  appId:             "1:90268413844:web:8680846083088a999d6981"
+}));
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTES
+   ═══════════════════════════════════════════════════════════════ */
+const MESES   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_S = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// Cartões do usuário
+const CARTOES = [
+  { id:'itau',   name:'Itaú LATAM PASS', color:'#f5a623' },
+  { id:'nubank', name:'Nubank',           color:'#9b72ff' },
+  { id:'porto',  name:'Porto Seguro',     color:'#4d9fff' },
+];
+
+// Cores padrão das categorias do sistema
+const CAT_COLORS_DEFAULT = {
+  'Alimentação':'#f59e0b','Mercado':'#10b981','Saúde':'#3b82f6',
+  'Lazer':'#8b5cf6','Viagem':'#06b6d4','Pet':'#f97316',
+  'Assinaturas':'#64748b','Educação':'#84cc16','Vestuário':'#ec4899',
+  'Casa':'#a78bfa','Carro':'#ff6b35','Pensão':'#475569',
+  'Moradia':'#7c3aed','Outros':'#94a3b8'
+};
+
+// Nomes das categorias do sistema (não podem ser removidas pelo usuário)
+const CATS_SISTEMA = Object.keys(CAT_COLORS_DEFAULT);
+
+// Limite padrão de parcelas como % da renda (30%)
+const LIMITE_PARC_DEFAULT = 0.30;
+
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+   ═══════════════════════════════════════════════════════════════ */
+let curYear   = new Date().getFullYear();   // ano atualmente visualizado
+let curMonth  = new Date().getMonth() + 1;  // mês atualmente visualizado
+let dashYear  = curYear;                    // ano selecionado no Dashboard
+let dashMonth = curMonth;                   // mês selecionado no Dashboard
+let curCartao = 'itau';                     // id do cartão ativo
+let curPage   = 'cartoes';                  // página visível no momento
+let curTipoGasto = 'normal';                // tipo selecionado no modal de gasto
+
+// Dados carregados do Firebase
+let gastos       = [];   // gastos do mês atual
+let debitos      = [];   // débitos fixos (permanentes)
+let catExtra     = [];   // categorias personalizadas criadas pelo usuário
+let widgets      = [];   // janelas de gráfico do Dashboard
+let pagamentos   = {};   // histórico de pagamentos dos débitos { debitoId_YYYY_MM: true }
+
+// Configurações do usuário
+let renda        = 0;
+let limiteParcPct= LIMITE_PARC_DEFAULT;
+let temaEscuro   = true;
+let geminiKey    = '';
+
+// Instâncias Chart.js ativas (para destruir antes de recriar)
+let charts = {};
+
+// Contadores de operações no Firebase (para exibir nas estatísticas)
+let fbStats = { reads: 0, writes: 0, lastSync: null };
+
+// Estado da ordenação da tabela de gastos
+let sortCol = 'data';   // coluna atualmente ordenada
+let sortAsc  = true;    // true = crescente, false = decrescente
+
+// Dados da prévia de importação de planilha
+let importData = [];
+
+// Timer para sugestão Gemini (evita chamar a API a cada tecla)
+let geminiSugTimer = null;
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITÁRIOS
+   ═══════════════════════════════════════════════════════════════ */
+
+// Gera chave Firebase "YYYY_MM" para o par ano/mês
+const mk     = (y, m) => `${y}_${String(m).padStart(2, '0')}`;
+
+// Chave do mês/ano atualmente navegado
+const curKey = ()     => mk(curYear, curMonth);
+
+// Atalho para document.getElementById
+const $      = id     => document.getElementById(id);
+
+// Formata número como moeda brasileira: "R$ 1.234,56"
+const fmtR   = v      => 'R$ ' + Math.abs(v || 0).toFixed(2)
+  .replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+// Retorna data de hoje no formato "YYYY-MM-DD" (compatível com input type=date)
+const today  = ()     => new Date().toISOString().split('T')[0];
+
+// Formata "YYYY-MM-DD" → "DD/MM" para exibição compacta
+const fmtDate = s => {
+  if (!s) return '—';
+  const [, m, d] = s.split('-');
+  return `${d}/${m}`;
+};
+
+// Escapa caracteres especiais HTML (protege contra XSS)
+const esc = s => String(s || '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Retorna a cor de uma categoria (procura nas extras primeiro, depois nas padrão)
+const getCatColor = cat => {
+  const extra = catExtra.find(c => c.nome === cat);
+  return extra ? extra.cor : (CAT_COLORS_DEFAULT[cat] || '#94a3b8');
+};
+
+// Retorna todas as categorias disponíveis (sistema + personalizadas)
+const getAllCats = () => [...new Set([...CATS_SISTEMA, ...catExtra.map(c => c.nome)])];
+
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE — Carregamento de dados
+   ═══════════════════════════════════════════════════════════════ */
+
+// Carrega todos os dados necessários ao iniciar ou ao forçar sincronização
+async function loadAll() {
+  loading(true);
+  try {
+    const [gSnap, dSnap, cfgSnap, wSnap, pgSnap] = await Promise.all([
+      get(ref(DB, `gastos/${curKey()}`)),   // gastos do mês atual
+      get(ref(DB, 'debitos')),               // todos os débitos fixos
+      get(ref(DB, 'config')),                // configurações do usuário
+      get(ref(DB, 'widgets')),               // janelas do dashboard
+      get(ref(DB, `pagamentos/${curKey()}`)) // pagamentos marcados neste mês
+    ]);
+    fbStats.reads += 5;
+    fbStats.lastSync = new Date();
+
+    // Processa gastos
+    gastos = [];
+    if (gSnap.exists()) gSnap.forEach(c => gastos.push({ id: c.key, ...c.val() }));
+
+    // Processa débitos
+    debitos = [];
+    if (dSnap.exists()) dSnap.forEach(c => debitos.push({ id: c.key, ...c.val() }));
+
+    // Processa configurações
+    if (cfgSnap.exists()) {
+      const cfg = cfgSnap.val();
+      renda         = cfg.renda         || 0;
+      limiteParcPct = cfg.limiteParcPct || LIMITE_PARC_DEFAULT;
+      catExtra      = cfg.categorias    || [];
+      temaEscuro    = cfg.tema !== 'light';
+    }
+
+    // Processa widgets do dashboard
+    widgets = [];
+    if (wSnap.exists()) wSnap.forEach(c => widgets.push({ id: c.key, ...c.val() }));
+    if (!widgets.length) await criarWidgetsPadrao();
+
+    // Processa histórico de pagamentos
+    pagamentos = {};
+    if (pgSnap.exists()) pgSnap.forEach(c => { pagamentos[c.key] = c.val(); });
+
+  } catch (e) {
+    console.error('Erro ao carregar:', e);
+    toast('Erro ao carregar dados', 'err');
+  }
+  loading(false);
+  aplicarTema();
+  atualizarFbStatus();
+  renderAll();
+}
+
+// Carrega apenas os gastos do mês atual (operação mais rápida, usada ao trocar mês)
+async function loadGastos() {
+  loading(true);
+  try {
+    const [gSnap, pgSnap] = await Promise.all([
+      get(ref(DB, `gastos/${curKey()}`)),
+      get(ref(DB, `pagamentos/${curKey()}`))
+    ]);
+    fbStats.reads += 2;
+    gastos = [];
+    if (gSnap.exists()) gSnap.forEach(c => gastos.push({ id: c.key, ...c.val() }));
+    pagamentos = {};
+    if (pgSnap.exists()) pgSnap.forEach(c => { pagamentos[c.key] = c.val(); });
+  } catch (e) { toast('Erro ao carregar gastos', 'err'); }
+  loading(false);
+}
+
+// Carrega os gastos de um mês/ano específico (usado pelo Dashboard ao mudar período)
+async function loadGastosPeriodo(year, month) {
+  const snap = await get(ref(DB, `gastos/${mk(year, month)}`));
+  fbStats.reads++;
+  const arr = [];
+  if (snap.exists()) snap.forEach(c => arr.push({ id: c.key, ...c.val() }));
+  return arr;
+}
+
+// Salva uma configuração no Firebase e atualiza o estado local
+async function saveConfig(key, value) {
+  if (key === 'renda')         renda         = parseFloat(value) || 0;
+  if (key === 'limiteParcPct') limiteParcPct = parseFloat(value) || LIMITE_PARC_DEFAULT;
+  try {
+    await set(ref(DB, `config/${key}`),
+      key === 'renda' ? renda : key === 'limiteParcPct' ? limiteParcPct : value
+    );
+    fbStats.writes++;
+    fbStats.lastSync = new Date();
+    atualizarFbStatus();
+    toast('Configuração salva!');
+  } catch (e) { toast('Erro ao salvar configuração', 'err'); }
+}
+
+// Monitora a conexão com o Firebase em tempo real via listener
+function monitorarConexao() {
+  onValue(ref(DB, '.info/connected'), snap => {
+    const conectado = snap.val();
+    const el = $('fb-status');
+    if (el) {
+      el.textContent = conectado ? '🟢 Conectado' : '🔴 Offline';
+      el.className = 'stat-val ' + (conectado ? 'ok' : 'offline');
+    }
+  });
+}
+
+// Atualiza os indicadores de estatísticas do Firebase na tela de configurações
+function atualizarFbStatus() {
+  const reads   = $('fb-reads');
+  const writes  = $('fb-writes');
+  const syncEl  = $('fb-sync');
+  const records = $('fb-records');
+  if (reads)   reads.textContent   = fbStats.reads;
+  if (writes)  writes.textContent  = fbStats.writes;
+  if (syncEl && fbStats.lastSync) syncEl.textContent = fbStats.lastSync.toLocaleTimeString('pt-BR');
+  if (records) records.textContent = `${gastos.length + debitos.length} registros`;
+}
+
+// Força uma nova sincronização completa com o Firebase
+window.forcSync = async () => {
+  toast('Sincronizando...', 'warn');
+  await loadAll();
+  toast('Sincronizado!');
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDERIZAÇÃO GERAL
+   Atualiza todos os componentes que precisam ser redesenhados
+   ═══════════════════════════════════════════════════════════════ */
+function renderAll() {
+  updateMonthTabs();
+  updateSidebarMonth();
+  updateCatSelects();
+  preencherDebitoAteSelects();
+  preencherGastoDestinoSelects();
+  renderCartoes();
+  if (curPage === 'debitos')   renderDebitos();
+  if (curPage === 'dashboard') renderDashboard();
+  if (curPage === 'config')    renderConfig();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVEGAÇÃO
+   ═══════════════════════════════════════════════════════════════ */
+
+// Navega para uma página específica e atualiza todos os controles visuais
+window.navTo = page => {
+  curPage = page;
+
+  // Ativa a página correta
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $(`page-${page}`)?.classList.add('active');
+
+  // Atualiza botões da sidebar e bottom nav
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+
+  // Atualiza título da topbar
+  const titles = { cartoes: 'Cartões', debitos: 'Débitos Fixos', dashboard: 'Dashboard', config: 'Configurações' };
+  $('topbar-title').textContent = titles[page] || page;
+
+  // Oculta as abas de mês nas páginas sem navegação temporal
+  $('month-tabs-wrap').style.display = ['debitos', 'config'].includes(page) ? 'none' : '';
+
+  // Renderiza o conteúdo da página selecionada
+  if (page === 'cartoes')   renderCartoes();
+  if (page === 'debitos')   renderDebitos();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'config')    renderConfig();
+};
+
+// Avança ou retrocede um mês (delta = +1 ou -1)
+window.changeMonth = delta => {
+  curMonth += delta;
+  if (curMonth > 12) { curMonth = 1; curYear++; }
+  if (curMonth < 1)  { curMonth = 12; curYear--; }
+  updateMonthTabs();
+  updateSidebarMonth();
+  loadGastos().then(() => {
+    renderCartoes();
+    if (curPage === 'dashboard') renderDashboard();
+  });
+};
+
+// Vai diretamente para um mês específico (1–12)
+window.goMonth = m => {
+  curMonth = m;
+  updateMonthTabs();
+  updateSidebarMonth();
+  loadGastos().then(() => {
+    renderCartoes();
+    if (curPage === 'dashboard') renderDashboard();
+  });
+};
+
+// Atualiza as abas de meses destacando o mês atual
+function updateMonthTabs() {
+  $('month-tabs').innerHTML = MESES_S.map((m, i) =>
+    `<button class="m-tab ${i + 1 === curMonth ? 'active' : ''}" onclick="goMonth(${i + 1})">${m}</button>`
+  ).join('');
+}
+
+// Atualiza o texto de mês/ano exibido na sidebar
+function updateSidebarMonth() {
+  $('sb-month-label').textContent = `${MESES[curMonth - 1]} ${curYear}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PÁGINA CARTÕES — Renderização completa
+   ═══════════════════════════════════════════════════════════════ */
+
+// Ponto de entrada para renderizar toda a página de cartões
+function renderCartoes() {
+  renderCartaoTabs();
+  renderGastosDoCartao();
+}
+
+// Cria as abas de seleção de cartão (Itaú, Nubank, Porto Seguro)
+function renderCartaoTabs() {
+  $('cartao-tabs').innerHTML = CARTOES.map(c =>
+    `<button class="cartao-tab ${c.id === curCartao ? 'active' : ''}" onclick="selectCartao('${c.id}')">
+      <span class="cartao-dot" style="background:${c.color}"></span>${c.name}
+    </button>`
+  ).join('');
+}
+
+// Troca o cartão ativo e atualiza a view
+window.selectCartao = id => {
+  curCartao = id;
+  renderGastosDoCartao();
+  renderCartaoTabs();
+};
+
+// Renderiza os mini-cards de resumo, tabela/cards e footer do cartão selecionado
+async function renderGastosDoCartao() {
+  // Filtra gastos pelo cartão ativo
+  const items = gastos.filter(g => g.cartao === curCartao);
+
+  // Aplica filtros de busca, categoria e tipo
+  const busca    = ($('filtro-busca')?.value || '').toLowerCase();
+  const filtCat  = $('filtro-cat')?.value  || '';
+  const filtTipo = $('filtro-tipo')?.value || '';
+  let filtrados  = items.filter(g => {
+    const matchBusca = !busca    || (g.descricao || '').toLowerCase().includes(busca);
+    const matchCat   = !filtCat  || g.categoria === filtCat;
+    const matchTipo  = !filtTipo || (g.tipo || 'normal') === filtTipo;
+    return matchBusca && matchCat && matchTipo;
+  });
+
+  // Aplica ordenação
+  filtrados = filtrados.sort((a, b) => {
+    let va = a[sortCol] ?? '';
+    let vb = b[sortCol] ?? '';
+    if (sortCol === 'valor') { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }
+    if (va < vb) return sortAsc ? -1 :  1;
+    if (va > vb) return sortAsc ?  1 : -1;
+    return 0;
+  });
+
+  // Atualiza os ícones de ordenação nos cabeçalhos
+  ['data','descricao','categoria','valor'].forEach(col => {
+    const el = $(`sort-${col}`);
+    if (el) el.textContent = col === sortCol ? (sortAsc ? '▲' : '▼') : '';
+  });
+
+  // Cálculos de totais
+  const total      = items.reduce((s, g) => s + (g.valor || 0), 0);
+  const parcelado  = items.filter(g => (g.tipo || 'normal') === 'parcelado').reduce((s, g) => s + (g.valor || 0), 0);
+  const recorrente = items.filter(g => (g.tipo || 'normal') === 'recorrente').reduce((s, g) => s + (g.valor || 0), 0);
+  const cartao     = CARTOES.find(c => c.id === curCartao);
+  const cor        = cartao?.color || 'var(--red)';
+
+  // ─── Mini-resumo visual (4 cards no topo) ───────────────────────────
+  $('cartao-resumo').innerHTML = `
+    <div class="cr-card" style="border-color:${cor}33">
+      <div class="cr-label">Total do Mês</div>
+      <div class="cr-val" style="color:${cor}">${fmtR(total)}</div>
+    </div>
+    <div class="cr-card">
+      <div class="cr-label">Parcelado</div>
+      <div class="cr-val" style="color:var(--gold)">${fmtR(parcelado)}</div>
+    </div>
+    <div class="cr-card">
+      <div class="cr-label">Recorrente</div>
+      <div class="cr-val" style="color:var(--blue)">${fmtR(recorrente)}</div>
+    </div>
+    <div class="cr-card">
+      <div class="cr-label">Lançamentos</div>
+      <div class="cr-val" style="color:var(--mid)">${items.length}</div>
+    </div>`;
+
+  // ─── Comparativo com o mês anterior ──────────────────────────────────
+  // Carrega os gastos do mês anterior para comparação
+  const dAnterior = new Date(curYear, curMonth - 2, 1);
+  const gastosAnt = await loadGastosPeriodo(dAnterior.getFullYear(), dAnterior.getMonth() + 1);
+  const totalAnt  = gastosAnt.filter(g => g.cartao === curCartao).reduce((s, g) => s + (g.valor || 0), 0);
+  const diff      = total - totalAnt;
+  const pct       = totalAnt > 0 ? ((diff / totalAnt) * 100).toFixed(0) : null;
+  const compEl    = $('cartao-comparativo');
+  if (compEl) {
+    if (totalAnt > 0) {
+      const cls  = diff > 0 ? 'mais' : diff < 0 ? 'menos' : 'igual';
+      const icon = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
+      compEl.innerHTML = `<div class="cartao-comparativo ${cls}">${icon} ${fmtR(Math.abs(diff))} ${pct ? `(${Math.abs(pct)}%)` : ''} vs. ${MESES_S[dAnterior.getMonth()]}</div>`;
+    } else {
+      compEl.innerHTML = '';
+    }
+  }
+
+  // ─── Alerta de parcelamentos pesados ─────────────────────────────────
+  const warn = $('parc-warn');
+  if (renda > 0 && parcelado > renda * limiteParcPct) {
+    warn.style.display = 'flex';
+    warn.textContent = `⚠ Parcelas: ${fmtR(parcelado)} (${((parcelado / renda) * 100).toFixed(0)}% da renda)`;
+  } else {
+    warn.style.display = 'none';
+  }
+
+  // ─── Atualiza barra de informações ───────────────────────────────────
+  $('cartao-total-val').textContent = fmtR(total);
+  $('cartao-total-val').style.color = cor;
+
+  // Atualiza contador do filtro
+  $('filtro-count').textContent = filtrados.length < items.length
+    ? `${filtrados.length} de ${items.length}` : `${items.length} lançamentos`;
+
+  $('table-total').textContent = fmtR(filtrados.reduce((s, g) => s + (g.valor || 0), 0));
+  $('table-count').textContent = `${filtrados.length} lançamento${filtrados.length !== 1 ? 's' : ''}`;
+
+  // ─── Estado vazio ─────────────────────────────────────────────────────
+  if (!filtrados.length) {
+    const msg = items.length
+      ? `<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum resultado para os filtros aplicados.</p></div>`
+      : `<div class="empty"><div class="empty-icon">💳</div><p>Nenhum gasto este mês.<br>Toque em + Adicionar.</p></div>`;
+    $('expense-tbody').innerHTML = `<tr><td colspan="6" style="border:none;padding:0">${msg}</td></tr>`;
+    $('expense-cards').innerHTML = msg;
+    return;
+  }
+
+  // ─── TABELA DESKTOP ───────────────────────────────────────────────────
+  $('expense-tbody').innerHTML = filtrados.map(g => {
+    const catCor  = getCatColor(g.categoria || 'Outros');
+    const tipo    = g.tipo || 'normal';
+    const tipoHtml = tipo === 'parcelado'
+      ? `<span class="tag t-parc">📅 ${esc(g.parcela || '—')}</span>`
+      : tipo === 'recorrente'
+        ? `<span class="tag t-recorr">🔄 Recorr.</span>`
+        : `<span class="tag">Normal</span>`;
+
+    return `<tr>
+      <td class="td-date">${fmtDate(g.data)}</td>
+      <td>
+        <div style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(g.descricao || '—')}</div>
+        ${g.notas ? `<div class="td-nota">📝 ${esc(g.notas)}</div>` : ''}
+      </td>
+      <td><span class="tag" style="background:${catCor}22;color:${catCor}">${esc(g.categoria || '—')}</span></td>
+      <td>${tipoHtml}</td>
+      <td class="td-val" style="text-align:right">${fmtR(g.valor)}</td>
+      <td><div class="td-actions">
+        <button class="btn-icon dup" onclick="duplicarGasto('${g.id}')" title="Duplicar">⧉</button>
+        <button class="btn-icon"     onclick="editarGasto('${g.id}')"   title="Editar">✎</button>
+        <button class="btn-icon del" onclick="deletarGasto('${g.id}')"  title="Deletar">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  // ─── CARDS MOBILE ─────────────────────────────────────────────────────
+  $('expense-cards').innerHTML = filtrados.map(g => {
+    const catCor = getCatColor(g.categoria || 'Outros');
+    const tipo   = g.tipo || 'normal';
+    return `<div class="exp-card" onclick="editarGasto('${g.id}')">
+      <span class="exp-card-dot" style="background:${catCor}"></span>
+      <div class="exp-card-body">
+        <div class="exp-card-desc">${esc(g.descricao || '—')}</div>
+        ${g.notas ? `<div class="exp-card-nota">📝 ${esc(g.notas)}</div>` : ''}
+        <div class="exp-card-sub">
+          <span class="tag" style="background:${catCor}22;color:${catCor}">${esc(g.categoria || '—')}</span>
+          ${tipo === 'parcelado'  ? `<span class="tag t-parc">${esc(g.parcela || '')}</span>` : ''}
+          ${tipo === 'recorrente' ? `<span class="tag t-recorr">🔄</span>` : ''}
+        </div>
+      </div>
+      <div class="exp-card-right">
+        <div class="exp-card-val">${fmtR(g.valor)}</div>
+        <div class="exp-card-date">${fmtDate(g.data)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Aplica os filtros ao digitar ou mudar selects (chamado por oninput/onchange)
+window.aplicarFiltro = () => renderGastosDoCartao();
+
+// Altera a coluna de ordenação — se já estava nessa coluna, inverte a direção
+window.sortBy = col => {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  renderGastosDoCartao();
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL DE GASTO — Abrir, editar, duplicar, salvar, deletar
+   ═══════════════════════════════════════════════════════════════ */
+
+// Abre o modal para um novo gasto (formulário limpo)
+window.openGastoModal = () => {
+  $('g-id').value    = '';
+  $('g-valor').value = '';
+  $('g-desc').value  = '';
+  $('g-data').value  = today();
+  $('g-cat').value   = '';
+  $('g-notas').value = '';
+  $('g-destino-wrap').style.display = 'none';
+  $('g-cartao-wrap').style.display  = 'none';
+  $('btn-del-gasto').style.display  = 'none';
+  $('modal-gasto-title').textContent = '＋ Novo Gasto';
+  $('btn-salvar-gasto').textContent  = 'Salvar Gasto';
+  $('gemini-sug').classList.remove('show');
+  selectTipo('normal');
+  openModal('modal-gasto');
+};
+
+// Seleciona o tipo de gasto e ajusta os campos exibidos
+window.selectTipo = tipo => {
+  curTipoGasto = tipo;
+  ['normal', 'parcelado', 'recorrente'].forEach(t =>
+    $(`tipo-${t}`)?.classList.toggle('active', t === tipo)
+  );
+  $('g-parc-fields').style.display  = tipo === 'parcelado'  ? 'block' : 'none';
+  $('g-recorr-info').style.display  = tipo === 'recorrente' ? 'block' : 'none';
+};
+
+// Salva um gasto novo ou atualizado
+window.salvarGasto = async () => {
+  const id      = $('g-id').value;
+  const valor   = parseFloat($('g-valor').value);
+  const desc    = $('g-desc').value.trim();
+  const data    = $('g-data').value;
+  const cat     = $('g-cat').value;
+  const notas   = $('g-notas').value.trim();
+  const tipo    = curTipoGasto;
+  const parcIni = parseInt($('g-parc-ini').value) || 1;
+  const parcTot = parseInt($('g-parc-tot').value) || 6;
+
+  if (!valor || !desc || !data) { toast('Preencha valor, descrição e data', 'err'); return; }
+
+  const btn = $('btn-salvar-gasto');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  try {
+    if (id) {
+      // ── EDIÇÃO: pode mover para outro mês/cartão ──
+      const novoMes    = parseInt($('g-mes-dest').value) || curMonth;
+      const novoAno    = parseInt($('g-ano-dest').value) || curYear;
+      const novoCartao = $('g-cartao-sel').value || curCartao;
+      const dados = { valor, descricao: desc, data, categoria: cat, cartao: novoCartao, tipo, notas,
+        parcela: tipo === 'parcelado' ? `${parcIni}/${parcTot}` : '' };
+
+      if (novoMes !== curMonth || novoAno !== curYear) {
+        // Remove do mês original e cria no mês destino
+        await remove(ref(DB, `gastos/${curKey()}/${id}`));
+        await push(ref(DB, `gastos/${mk(novoAno, novoMes)}`), dados);
+        fbStats.writes += 2;
+        toast(`Gasto movido para ${MESES_S[novoMes - 1]} ${novoAno}`);
+      } else {
+        await update(ref(DB, `gastos/${curKey()}/${id}`), dados);
+        fbStats.writes++;
+        toast('Gasto atualizado!');
+      }
+
+    } else if (tipo === 'parcelado' && parcTot > 1) {
+      // ── PARCELADO: cria uma entrada por parcela nos meses seguintes ──
+      for (let p = parcIni; p <= parcTot; p++) {
+        const d = new Date(data + 'T00:00:00');
+        d.setMonth(d.getMonth() + (p - parcIni));
+        const key = mk(d.getFullYear(), d.getMonth() + 1);
+        await push(ref(DB, `gastos/${key}`), {
+          valor, descricao: desc, data: d.toISOString().split('T')[0],
+          categoria: cat, cartao: curCartao, tipo: 'parcelado',
+          parcela: `${p}/${parcTot}`, notas
+        });
+        fbStats.writes++;
+      }
+      toast(`✦ ${parcTot - parcIni + 1} parcelas criadas!`);
+
+    } else {
+      // ── NORMAL ou RECORRENTE: entrada única ──
+      await push(ref(DB, `gastos/${curKey()}`), {
+        valor, descricao: desc, data, categoria: cat,
+        cartao: curCartao, tipo, notas,
+        parcela: tipo === 'parcelado' ? `${parcIni}/${parcTot}` : ''
+      });
+      fbStats.writes++;
+      toast(tipo === 'recorrente' ? '🔄 Gasto recorrente salvo!' : 'Gasto salvo!');
+    }
+
+    closeModal('modal-gasto');
+    await loadGastos();
+    renderCartoes();
+    if (curPage === 'dashboard') renderDashboard();
+
+  } catch (e) { toast('Erro ao salvar', 'err'); }
+  btn.disabled = false; btn.textContent = 'Salvar';
+};
+
+// Abre o modal em modo edição com os dados do gasto selecionado
+window.editarGasto = id => {
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+
+  $('g-id').value    = id;
+  $('g-valor').value = g.valor   || '';
+  $('g-data').value  = g.data    || '';
+  $('g-desc').value  = g.descricao || '';
+  $('g-cat').value   = g.categoria || '';
+  $('g-notas').value = g.notas   || '';
+  $('modal-gasto-title').textContent = '✎ Editar Gasto';
+  $('btn-salvar-gasto').textContent  = 'Atualizar';
+  $('btn-del-gasto').style.display   = '';
+
+  // Mostra seletor de mês destino e cartão no modo edição
+  $('g-destino-wrap').style.display = '';
+  $('g-mes-dest').value = curMonth;
+  $('g-ano-dest').value = curYear;
+  $('g-cartao-wrap').style.display = '';
+  $('g-cartao-sel').innerHTML = CARTOES.map(c =>
+    `<option value="${c.id}" ${c.id === g.cartao ? 'selected' : ''}>${c.name}</option>`
+  ).join('');
+
+  $('gemini-sug').classList.remove('show');
+  selectTipo(g.tipo || 'normal');
+
+  if (g.parcela) {
+    const [ini, tot] = g.parcela.split('/');
+    $('g-parc-ini').value = ini || 1;
+    $('g-parc-tot').value = tot || 6;
+  }
+
+  openModal('modal-gasto');
+};
+
+// Duplica um gasto: abre o modal pré-preenchido para editar e salvar como novo
+window.duplicarGasto = id => {
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+
+  // Preenche o formulário com os dados do original, mas sem o ID
+  $('g-id').value    = '';  // sem id = vai criar um novo
+  $('g-valor').value = g.valor   || '';
+  $('g-data').value  = today();  // data de hoje (não copia a data original)
+  $('g-desc').value  = g.descricao || '';
+  $('g-cat').value   = g.categoria || '';
+  $('g-notas').value = g.notas   || '';
+  $('modal-gasto-title').textContent = `⧉ Duplicar: ${g.descricao}`;
+  $('btn-salvar-gasto').textContent  = 'Salvar Cópia';
+  $('btn-del-gasto').style.display   = 'none';
+  $('g-destino-wrap').style.display  = 'none';
+  $('g-cartao-wrap').style.display   = 'none';
+  $('gemini-sug').classList.remove('show');
+  selectTipo(g.tipo || 'normal');
+  openModal('modal-gasto');
+  toast('Formulário pré-preenchido — edite se necessário');
+};
+
+// Deleta um gasto pelo ID
+window.deletarGasto = async id => {
+  if (!confirm('Deletar este gasto?')) return;
+  try {
+    await remove(ref(DB, `gastos/${curKey()}/${id}`));
+    fbStats.writes++;
+    closeModal('modal-gasto');
+    gastos = gastos.filter(g => g.id !== id);
+    renderCartoes();
+    if (curPage === 'dashboard') renderDashboard();
+    toast('Gasto removido');
+  } catch (e) { toast('Erro ao deletar', 'err'); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PÁGINA DÉBITOS FIXOS — Renderização e CRUD
+   ═══════════════════════════════════════════════════════════════ */
+
+// Renderiza toda a página de Débitos Fixos
+function renderDebitos() {
+  const hoje         = new Date();
+  const diaHoje      = hoje.getDate();
+  const normais      = debitos.filter(d => d.tipoPet !== 'bob');
+  const bob          = debitos.filter(d => d.tipoPet === 'bob');
+
+  // ─── Card de total mensal com breakdown por categoria ─────────────────
+  const debitosAtivos = debitos.filter(d => d.status === 'ativo');
+  const totalMensal   = debitosAtivos.reduce((s, d) => s + (d.valor || 0), 0);
+
+  // Agrupa por categoria para o breakdown
+  const porCat = {};
+  debitosAtivos.forEach(d => {
+    const c = d.categoria || 'Outros';
+    porCat[c] = (porCat[c] || 0) + (d.valor || 0);
+  });
+  const breakdownHtml = Object.entries(porCat)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, val]) =>
+      `<div class="debitos-break-item">
+        <span class="debitos-break-dot" style="background:${getCatColor(cat)}"></span>
+        ${cat} <span class="debitos-break-val">${fmtR(val)}</span>
+      </div>`
+    ).join('');
+
+  $('debitos-total-card').innerHTML = `
+    <div class="debitos-total-header">
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--mid);margin-bottom:4px">Total Mensal Fixo</div>
+        <div class="debitos-total-val">${fmtR(totalMensal)}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openDebitoModal()">＋ Adicionar</button>
+    </div>
+    <div class="debitos-breakdown">${breakdownHtml || '<span style="font-size:.75rem;color:var(--dim)">Nenhum débito ativo</span>'}</div>`;
+
+  // ─── Próximos vencimentos (próximos 7 dias) ──────────────────────────
+  const proximosDias = 7;
+  const proximos     = debitosAtivos
+    .filter(d => d.dia && d.dia >= diaHoje && d.dia <= diaHoje + proximosDias)
+    .sort((a, b) => a.dia - b.dia);
+
+  const proxWrap = $('proximos-wrap');
+  const proxList = $('proximos-list');
+  if (proximos.length) {
+    proxWrap.style.display = 'block';
+    proxList.innerHTML = proximos.map(d => `
+      <div class="proximo-item">
+        <div>
+          <div class="proximo-nome">${esc(d.nome)}</div>
+          <div style="font-size:.68rem;color:var(--mid)">${d.categoria || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="proximo-dia">Dia ${d.dia}</span>
+          <span class="proximo-val">${fmtR(d.valor)}</span>
+        </div>
+      </div>`).join('');
+  } else {
+    proxWrap.style.display = 'none';
+  }
+
+  // ─── Lista de débitos normais (ordenados por dia de vencimento) ───────
+  const normaisOrdenados = [...normais].sort((a, b) => (a.dia || 99) - (b.dia || 99));
+  $('debitos-list').innerHTML = normaisOrdenados.length
+    ? normaisOrdenados.map(d => debitoHtml(d)).join('')
+    : `<div class="empty"><div class="empty-icon">📋</div><p>Nenhum débito fixo cadastrado.</p></div>`;
+
+  // ─── Bob: total e breakdown visual ───────────────────────────────────
+  const bobAtivos = bob.filter(d => d.status === 'ativo');
+  const bobTotal  = bobAtivos.reduce((s, d) => s + (d.valor || 0), 0);
+  $('bob-total').textContent = fmtR(bobTotal);
+
+  // Breakdown visual dos itens do Bob
+  $('bob-breakdown').innerHTML = bobAtivos.length
+    ? bobAtivos.map(d => `
+      <div class="bob-break-row">
+        <span class="bob-break-name">
+          <span style="width:7px;height:7px;border-radius:50%;background:${getCatColor(d.categoria||'Pet')};display:inline-block"></span>
+          ${esc(d.nome)}
+        </span>
+        <span class="bob-break-val">${fmtR(d.valor)}</span>
+      </div>`).join('')
+    : '';
+
+  // Lista detalhada do Bob (ordenada por vencimento)
+  const bobOrdenado = [...bob].sort((a, b) => (a.dia || 99) - (b.dia || 99));
+  $('bob-list').innerHTML = bobOrdenado.length
+    ? bobOrdenado.map(d => debitoHtml(d)).join('')
+    : `<div class="empty" style="padding:16px"><div class="empty-icon">🐕</div><p>Nenhum gasto do Bob.</p></div>`;
+}
+
+// Gera o HTML de um item de débito fixo
+function debitoHtml(d) {
+  const cor       = getCatColor(d.categoria || 'Outros');
+  const hoje      = new Date();
+  // Verifica se o débito passou da data de encerramento
+  const encerrado = d.ateTipo === 'definido' && d.ateMes && d.ateAno &&
+    new Date(d.ateAno, d.ateMes - 1) < hoje;
+
+  // Calcula projeção de encerramento (meses restantes e total a pagar)
+  let projecaoHtml = '';
+  if (d.ateTipo === 'definido' && d.ateMes && d.ateAno && !encerrado) {
+    const fimDate     = new Date(d.ateAno, d.ateMes - 1);
+    const mesesRest   = (fimDate.getFullYear() - hoje.getFullYear()) * 12 + (fimDate.getMonth() - hoje.getMonth());
+    const totalRest   = mesesRest * (d.valor || 0);
+    projecaoHtml = `<div class="debito-projecao">📆 ${mesesRest} mes${mesesRest !== 1 ? 'es' : ''} restante${mesesRest !== 1 ? 's' : ''} · ${fmtR(totalRest)} a pagar</div>`;
+  }
+
+  // Verifica se já foi marcado como pago este mês
+  const pgKey  = `${d.id}`;
+  const pago   = pagamentos[pgKey] === true;
+
+  // Badge de pago / não pago (clicável)
+  const badgePago = `<span class="badge-pago ${pago ? 'sim' : 'nao'}" onclick="togglePagamento('${d.id}')" title="${pago ? 'Clique para desmarcar' : 'Clique para marcar como pago'}">${pago ? '✓ Pago' : 'Marcar pago'}</span>`;
+
+  // Exibe "Até MM/YYYY" ou "Indefinido"
+  const ateLabel = d.ateTipo === 'definido' && d.ateMes && d.ateAno
+    ? `<span class="tag t-warn">Até ${MESES_S[d.ateMes - 1]}/${d.ateAno}</span>`
+    : `<span class="tag">Indefinido</span>`;
+
+  return `<div class="debito-item ${d.status === 'pausado' ? 'pausado' : ''} ${encerrado ? 'encerrado' : ''}">
+    <span class="debito-dot" style="background:${cor}"></span>
+    <div class="debito-body">
+      <div class="debito-name">${esc(d.nome || '—')}</div>
+      <div class="debito-meta">
+        <span class="tag ${d.status === 'ativo' ? 't-active' : d.status === 'encerrado' ? '' : 't-paused'}">${
+          d.status === 'ativo' ? 'Ativo' : d.status === 'encerrado' ? '✓ Encerrado' : 'Pausado'}</span>
+        ${d.dia ? `<span class="tag t-warn">Dia ${d.dia}</span>` : ''}
+        <span class="tag" style="background:${cor}22;color:${cor}">${esc(d.categoria || '—')}</span>
+        ${ateLabel}
+        ${badgePago}
+      </div>
+      ${projecaoHtml}
+    </div>
+    <!-- Valor com opção de reajuste rápido inline -->
+    <div class="debito-val-wrap">
+      <span class="debito-val" id="dval-${d.id}">${fmtR(d.valor)}</span>
+      <input class="debito-val-input" id="dinput-${d.id}" type="number" step="0.01"
+        value="${d.valor || 0}"
+        onblur="salvarReajusteValor('${d.id}', this.value)"
+        onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelarReajuste('${d.id}')">
+    </div>
+    <div class="debito-actions">
+      <button class="btn-icon" onclick="ativarReajuste('${d.id}')" title="Reajustar valor">✎₊</button>
+      <button class="btn-icon" onclick="editarDebito('${d.id}')"   title="Editar">✎</button>
+      <button class="btn-icon del" onclick="deletarDebito('${d.id}')" title="Deletar">✕</button>
+    </div>
+  </div>`;
+}
+
+// Alterna a marcação de "pago" de um débito no mês atual
+window.togglePagamento = async id => {
+  const atual = pagamentos[id] === true;
+  pagamentos[id] = !atual;
+  try {
+    await set(ref(DB, `pagamentos/${curKey()}/${id}`), !atual);
+    fbStats.writes++;
+    renderDebitos(); // re-renderiza para atualizar o badge
+    toast(!atual ? '✓ Marcado como pago' : 'Desmarcado');
+  } catch (e) { toast('Erro ao registrar pagamento', 'err'); }
+};
+
+// Ativa o modo de reajuste rápido de valor (exibe input inline)
+window.ativarReajuste = id => {
+  $(`dval-${id}`)?.style.setProperty('display', 'none');
+  const inp = $(`dinput-${id}`);
+  if (inp) { inp.classList.add('show'); inp.focus(); inp.select(); }
+};
+
+// Salva o novo valor após o reajuste rápido
+window.salvarReajusteValor = async (id, val) => {
+  const novoValor = parseFloat(val) || 0;
+  const idx = debitos.findIndex(d => d.id === id);
+  if (idx < 0) return;
+  debitos[idx].valor = novoValor;
+  try {
+    await update(ref(DB, `debitos/${id}`), { valor: novoValor });
+    fbStats.writes++;
+    toast('Valor atualizado!');
+  } catch (e) { toast('Erro ao atualizar', 'err'); }
+  renderDebitos();
+};
+
+// Cancela o reajuste e volta a exibir o valor original
+window.cancelarReajuste = id => {
+  $(`dinput-${id}`)?.classList.remove('show');
+  $(`dval-${id}`)?.style.removeProperty('display');
+};
+
+// Abre o modal para adicionar um novo débito
+window.openDebitoModal = (tipoPet) => {
+  $('d-id').value       = '';
+  $('d-nome').value     = '';
+  $('d-valor').value    = '';
+  $('d-dia').value      = '';
+  $('d-cat').value      = '';
+  $('d-status').value   = 'ativo';
+  $('d-ate-tipo').value = 'indefinido';
+  $('d-ate-fields').style.display = 'none';
+  $('d-tipo-pet').value = tipoPet || 'normal';
+  $('btn-del-debito').style.display = 'none';
+  $('modal-debito-title').textContent = tipoPet === 'bob' ? '🐕 Gasto do Bob' : '＋ Novo Débito Fixo';
+  openModal('modal-debito');
+};
+
+// Exibe/oculta os campos de data de encerramento
+window.toggleDebitoAte = () => {
+  $('d-ate-fields').style.display = $('d-ate-tipo').value === 'definido' ? 'grid' : 'none';
+};
+
+// Abre o modal em modo edição com os dados do débito
+window.editarDebito = id => {
+  const d = debitos.find(x => x.id === id);
+  if (!d) return;
+
+  $('d-id').value       = id;
+  $('d-nome').value     = d.nome    || '';
+  $('d-valor').value    = d.valor   || '';
+  $('d-dia').value      = d.dia     || '';
+  $('d-cat').value      = d.categoria || '';
+  $('d-status').value   = d.status  || 'ativo';
+  $('d-ate-tipo').value = d.ateTipo || 'indefinido';
+  $('d-tipo-pet').value = d.tipoPet || 'normal';
+  $('btn-del-debito').style.display = '';
+  $('modal-debito-title').textContent = d.tipoPet === 'bob' ? '🐕 Editar Gasto do Bob' : '✎ Editar Débito Fixo';
+
+  if (d.ateTipo === 'definido') {
+    $('d-ate-fields').style.display = 'grid';
+    $('d-ate-mes').value = d.ateMes || curMonth;
+    $('d-ate-ano').value = d.ateAno || curYear;
+  } else {
+    $('d-ate-fields').style.display = 'none';
+  }
+
+  openModal('modal-debito');
+};
+
+// Salva (cria ou atualiza) um débito fixo
+window.salvarDebito = async () => {
+  const id = $('d-id').value;
+  const dados = {
+    nome:      $('d-nome').value.trim(),
+    valor:     parseFloat($('d-valor').value) || 0,
+    dia:       parseInt($('d-dia').value)     || null,
+    categoria: $('d-cat').value,
+    status:    $('d-status').value,
+    tipoPet:   $('d-tipo-pet').value,
+    ateTipo:   $('d-ate-tipo').value,
+    ateMes:    $('d-ate-tipo').value === 'definido' ? parseInt($('d-ate-mes').value) : null,
+    ateAno:    $('d-ate-tipo').value === 'definido' ? parseInt($('d-ate-ano').value) : null,
+  };
+
+  if (!dados.nome) { toast('Preencha o nome', 'err'); return; }
+
+  try {
+    if (id) {
+      await update(ref(DB, `debitos/${id}`), dados);
+      toast('Débito atualizado!');
+    } else {
+      await push(ref(DB, 'debitos'), dados);
+      toast('Débito salvo!');
+    }
+    fbStats.writes++;
+    closeModal('modal-debito');
+
+    // Recarrega a lista de débitos
+    const snap = await get(ref(DB, 'debitos'));
+    fbStats.reads++;
+    debitos = [];
+    if (snap.exists()) snap.forEach(c => debitos.push({ id: c.key, ...c.val() }));
+    renderDebitos();
+    if (curPage === 'dashboard') renderDashboard();
+  } catch (e) { toast('Erro ao salvar', 'err'); }
+};
+
+// Deleta um débito fixo
+window.deletarDebito = async id => {
+  if (!confirm('Deletar este débito?')) return;
+  try {
+    await remove(ref(DB, `debitos/${id}`));
+    fbStats.writes++;
+    debitos = debitos.filter(d => d.id !== id);
+    closeModal('modal-debito');
+    renderDebitos();
+    toast('Débito removido');
+  } catch (e) { toast('Erro ao deletar', 'err'); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD — Renderização
+   ═══════════════════════════════════════════════════════════════ */
+
+// Renderiza o Dashboard com o período selecionado
+async function renderDashboard() {
+  preencherDashPeriodSelects();
+
+  // Carrega os gastos do período selecionado no Dashboard
+  const gastosD = await loadGastosPeriodo(dashYear, dashMonth);
+
+  // Totais
+  const totalCartoes  = gastosD.reduce((s, g) => s + (g.valor || 0), 0);
+  const debitosAtivos = debitos.filter(d => {
+    if (d.status !== 'ativo') return false;
+    // Só inclui débitos que ainda estão vigentes no período do dashboard
+    if (d.ateTipo === 'definido' && d.ateMes && d.ateAno) {
+      if (new Date(d.ateAno, d.ateMes - 1) < new Date(dashYear, dashMonth - 1)) return false;
+    }
+    return true;
+  });
+  const totalDebitos  = debitosAtivos.reduce((s, d) => s + (d.valor || 0), 0);
+  const totalGeral    = totalCartoes + totalDebitos;
+  const pctRenda      = renda > 0 ? (totalGeral / renda) * 100 : 0;
+  const saldo         = renda - totalGeral;
+
+  // ─── Score de saúde financeira ────────────────────────────────────────
+  let score = 100;
+  if (renda > 0) {
+    if (pctRenda > 100) score = 10;
+    else if (pctRenda > 90) score = 30;
+    else if (pctRenda > 75) score = 55;
+    else if (pctRenda > 60) score = 70;
+    else if (pctRenda > 45) score = 85;
+    else score = 95;
+  } else { score = 50; }
+
+  const totalParc = gastosD.filter(g => g.tipo === 'parcelado' || g.parcela).reduce((s, g) => s + (g.valor || 0), 0);
+  if (renda > 0 && totalParc > renda * limiteParcPct) score = Math.max(score - 15, 5);
+
+  const scoreCor   = score >= 70 ? 'var(--accent)' : score >= 40 ? 'var(--gold)' : 'var(--red)';
+  const scoreLabel = score >= 70 ? '✦ Saudável' : score >= 40 ? '⚠ Atenção' : '✕ Crítico';
+
+  $('health-score').textContent       = score;
+  $('health-score').style.color       = scoreCor;
+  $('health-score').style.borderColor = scoreCor;
+  $('health-score').style.background  = scoreCor + '18';
+  $('health-desc').textContent        = scoreLabel;
+  $('health-desc').style.color        = scoreCor;
+  $('health-bar').style.width         = score + '%';
+  $('health-bar').style.background    = scoreCor;
+
+  // ─── Cards de métricas ────────────────────────────────────────────────
+  $('dash-cards').innerHTML = `
+    <div class="sum-card c-red">
+      <div class="sum-card-label">Total Cartões</div>
+      <div class="sum-card-val neg">${fmtR(totalCartoes)}</div>
+      <div class="sum-card-sub">${gastosD.length} lançamentos</div>
+    </div>
+    <div class="sum-card c-blue">
+      <div class="sum-card-label">Débitos Fixos</div>
+      <div class="sum-card-val neg">${fmtR(totalDebitos)}</div>
+      <div class="sum-card-sub">${debitosAtivos.length} ativos</div>
+    </div>
+    <div class="sum-card c-gold">
+      <div class="sum-card-label">Total Geral</div>
+      <div class="sum-card-val neg">${fmtR(totalGeral)}</div>
+      ${renda > 0 ? `<div class="sum-card-sub">${pctRenda.toFixed(0)}% da renda</div>` : ''}
+    </div>
+    <div class="sum-card c-green">
+      <div class="sum-card-label">${renda > 0 ? 'Saldo Estimado' : 'Renda'}</div>
+      <div class="sum-card-val ${renda > 0 ? (saldo >= 0 ? 'pos' : 'neg') : ''}">
+        ${renda > 0 ? (saldo < 0 ? '−' : '') + fmtR(saldo) : 'Não definida'}
+      </div>
+    </div>`;
+
+  // ─── Janelas de gráfico ───────────────────────────────────────────────
+
+  // Prepara dados agregados para os gráficos
+  const porCat = {};
+  gastosD.forEach(g => {
+    const cat = g.categoria || 'Outros';
+    porCat[cat] = (porCat[cat] || 0) + (g.valor || 0);
+  });
+
+  const porCartao = {};
+  CARTOES.forEach(c => porCartao[c.name] = 0);
+  gastosD.forEach(g => {
+    const nome = CARTOES.find(c => c.id === g.cartao)?.name || g.cartao;
+    porCartao[nome] = (porCartao[nome] || 0) + (g.valor || 0);
+  });
+
+  await renderWidgets(gastosD, porCat, porCartao);
+  renderParcelamentosAtivos(gastosD);
+}
+
+// Preenche os selects de ano e mês do Dashboard
+function preencherDashPeriodSelects() {
+  const anoSel = $('dash-ano');
+  const mesSel = $('dash-mes');
+  if (!anoSel || !mesSel) return;
+
+  // Reconstrói os selects mantendo o valor selecionado
+  anoSel.innerHTML = '';
+  for (let y = curYear - 3; y <= curYear + 1; y++) {
+    anoSel.innerHTML += `<option value="${y}" ${y === dashYear ? 'selected' : ''}>${y}</option>`;
+  }
+  mesSel.innerHTML = MESES.map((m, i) =>
+    `<option value="${i + 1}" ${i + 1 === dashMonth ? 'selected' : ''}>${m}</option>`
+  ).join('');
+}
+
+// Evento disparado ao mudar o período do Dashboard
+window.onDashPeriodChange = () => {
+  dashYear  = parseInt($('dash-ano').value);
+  dashMonth = parseInt($('dash-mes').value);
+  renderDashboard();
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   WIDGETS DO DASHBOARD
+   ═══════════════════════════════════════════════════════════════ */
+
+// Cria os widgets padrão quando o usuário ainda não tem nenhum salvo
+async function criarWidgetsPadrao() {
+  const padroes = [
+    { titulo: 'Gastos por Categoria', tipo: 'pizza',    largura: 'half', altura: 240 },
+    { titulo: 'Por Cartão',           tipo: 'barras',   largura: 'half', altura: 240 },
+    { titulo: 'Histórico 6 Meses',   tipo: 'historico', largura: 'full', altura: 220 },
+  ];
+  for (const w of padroes) {
+    const r = push(ref(DB, 'widgets'));
+    await set(r, w);
+    fbStats.writes++;
+    widgets.push({ id: r.key, ...w });
+  }
+}
+
+// Renderiza todas as janelas de gráfico na grade
+async function renderWidgets(gastosD, porCat, porCartao) {
+  const grid = $('dashboard-grid');
+  grid.innerHTML = '';
+
+  for (const w of widgets) {
+    const div = document.createElement('div');
+    div.className = `dash-widget ${w.largura === 'full' ? 'full-width' : ''}`;
+    div.style.minHeight = (w.altura || 220) + 'px';
+    div.dataset.id = w.id;
+
+    div.innerHTML = `
+      <div class="widget-header">
+        <span class="widget-title">${esc(w.titulo || 'Gráfico')}</span>
+        <div class="widget-actions">
+          <button class="widget-btn" onclick="abrirConfigWidget('${w.id}')" title="Configurar">⚙</button>
+          <button class="widget-btn" onclick="toggleWidgetSize('${w.id}')" title="Alternar tamanho">⬚</button>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="widget-chart-wrap" style="height:${(w.altura || 220) - 50}px">
+          <canvas id="chart-widget-${w.id}"></canvas>
+        </div>
+      </div>`;
+    grid.appendChild(div);
+
+    // Renderiza o gráfico deste widget
+    await criarGraficoWidget(w, porCat, porCartao);
+  }
+}
+
+// Cria o gráfico Chart.js de acordo com o tipo configurado no widget
+async function criarGraficoWidget(w, porCat, porCartao) {
+  const canvas = $(`chart-widget-${w.id}`);
+  if (!canvas) return;
+
+  // Destrói o gráfico anterior para evitar sobreposição
+  const chKey = `widget_${w.id}`;
+  if (charts[chKey]) { charts[chKey].destroy(); delete charts[chKey]; }
+
+  // Opções comuns para todos os gráficos
+  const commonOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: 'var(--mid)', font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 10, boxWidth: 10, boxHeight: 10 } },
+      tooltip: { callbacks: { label: c => ` ${c.label || ''}: ${fmtR(c.raw)}` }, bodyFont: { family: 'Plus Jakarta Sans' } }
+    }
+  };
+  const scales = {
+    x: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--dim)', font: { size: 10, family: 'Plus Jakarta Sans' } } },
+    y: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--dim)', font: { size: 10, family: 'Plus Jakarta Sans' }, callback: v => 'R$' + v.toLocaleString('pt-BR') } }
+  };
+
+  if (w.tipo === 'pizza') {
+    const labels = Object.keys(porCat).filter(k => porCat[k] > 0);
+    if (!labels.length) return;
+    charts[chKey] = new Chart(canvas, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: labels.map(k => porCat[k]), backgroundColor: labels.map(k => getCatColor(k) + 'cc'), borderColor: labels.map(k => getCatColor(k)), borderWidth: 2 }] },
+      options: { ...commonOpts, cutout: '58%' }
+    });
+
+  } else if (w.tipo === 'barras') {
+    const labels = Object.keys(porCartao).filter(k => porCartao[k] > 0);
+    const CORES  = ['#f5a623', '#9b72ff', '#4d9fff'];
+    charts[chKey] = new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: labels.map(k => porCartao[k]), backgroundColor: CORES.map(c => c + '55'), borderColor: CORES, borderWidth: 2, borderRadius: 6 }] },
+      options: { ...commonOpts, plugins: { ...commonOpts.plugins, legend: { display: false } }, scales }
+    });
+
+  } else if (w.tipo === 'barras-h') {
+    const labels = Object.keys(porCat).filter(k => porCat[k] > 0).slice(0, 8);
+    charts[chKey] = new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: labels.map(k => porCat[k]), backgroundColor: labels.map(k => getCatColor(k) + '88'), borderColor: labels.map(k => getCatColor(k)), borderWidth: 1, borderRadius: 4 }] },
+      options: { ...commonOpts, indexAxis: 'y', plugins: { ...commonOpts.plugins, legend: { display: false } }, scales: { x: scales.x, y: { ...scales.y, ticks: { color: 'var(--mid)', font: { size: 10 } } } } }
+    });
+
+  } else if (w.tipo === 'historico') {
+    // Busca dados dos últimos 6 meses para o gráfico histórico
+    const months  = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(dashYear, dashMonth - 1 - i, 1);
+      months.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
+    }
+    const results  = await Promise.all(months.map(({ y, m }) => get(ref(DB, `gastos/${mk(y, m)}`))));
+    fbStats.reads += 6;
+    const labels   = months.map(({ m }) => MESES_S[m - 1]);
+    const gstData  = results.map(s => { let t = 0; if (s.exists()) s.forEach(c => t += c.val().valor || 0); return t; });
+    const debTotal = debitos.filter(d => d.status === 'ativo').reduce((s, d) => s + (d.valor || 0), 0);
+    const totData  = gstData.map(g => g + debTotal);
+    const rendaArr = months.map(() => renda);
+
+    charts[chKey] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Gastos', data: totData, backgroundColor: '#ff4d6d44', borderColor: '#ff4d6d', borderWidth: 2, borderRadius: 5, order: 2 },
+          ...(renda > 0 ? [{ label: 'Renda', data: rendaArr, type: 'line', borderColor: 'var(--accent)', backgroundColor: 'var(--accent2)', borderWidth: 2, pointBackgroundColor: 'var(--accent)', pointRadius: 4, tension: 0.3, fill: false, order: 1 }] : [])
+        ]
+      },
+      options: { ...commonOpts, scales }
+    });
+  }
+}
+
+// Alterna um widget entre meia largura e largura total
+window.toggleWidgetSize = async id => {
+  const w = widgets.find(x => x.id === id);
+  if (!w) return;
+  w.largura = w.largura === 'full' ? 'half' : 'full';
+  await update(ref(DB, `widgets/${id}`), { largura: w.largura });
+  fbStats.writes++;
+  renderDashboard();
+};
+
+// Abre o modal de configuração de um widget
+window.abrirConfigWidget = id => {
+  const w = widgets.find(x => x.id === id);
+  if (!w) return;
+  $('w-id').value      = id;
+  $('w-titulo').value  = w.titulo  || '';
+  $('w-tipo').value    = w.tipo    || 'pizza';
+  $('w-largura').value = w.largura || 'half';
+  $('w-altura').value  = w.altura  || 220;
+  openModal('modal-widget');
+};
+
+// Salva as configurações de um widget e re-renderiza o dashboard
+window.salvarWidget = async () => {
+  const id   = $('w-id').value;
+  const dados = {
+    titulo:  $('w-titulo').value.trim(),
+    tipo:    $('w-tipo').value,
+    largura: $('w-largura').value,
+    altura:  parseInt($('w-altura').value) || 220,
+  };
+  await update(ref(DB, `widgets/${id}`), dados);
+  fbStats.writes++;
+  const idx = widgets.findIndex(w => w.id === id);
+  if (idx > -1) widgets[idx] = { ...widgets[idx], ...dados };
+  closeModal('modal-widget');
+  renderDashboard();
+  toast('Gráfico atualizado!');
+};
+
+// Remove um widget do dashboard
+window.removerWidget = async id => {
+  if (!confirm('Remover esta janela?')) return;
+  await remove(ref(DB, `widgets/${id}`));
+  fbStats.writes++;
+  widgets = widgets.filter(w => w.id !== id);
+  closeModal('modal-widget');
+  renderDashboard();
+  toast('Janela removida');
+};
+
+// Adiciona uma nova janela de gráfico ao dashboard
+window.addDashWidget = async () => {
+  const novo = { titulo: 'Novo Gráfico', tipo: 'pizza', largura: 'half', altura: 220 };
+  const r    = push(ref(DB, 'widgets'));
+  await set(r, novo);
+  fbStats.writes++;
+  widgets.push({ id: r.key, ...novo });
+  renderDashboard();
+  toast('Nova janela adicionada!');
+};
+
+// Renderiza a lista de parcelamentos ativos no dashboard
+function renderParcelamentosAtivos(gastosD) {
+  const parcs = gastosD.filter(g => g.parcela || g.tipo === 'parcelado');
+  const el    = $('parc-ativos-list');
+  if (!parcs.length) {
+    el.innerHTML = `<div class="empty" style="padding:12px"><p>Nenhum parcelamento ativo este período</p></div>`;
+    return;
+  }
+  const nomCartao = id => CARTOES.find(c => c.id === id)?.name || id;
+  el.innerHTML = parcs.map(g => `
+    <div class="parc-item">
+      <div>
+        <div class="parc-name">${esc(g.descricao || '—')}</div>
+        <div class="parc-sub">${nomCartao(g.cartao)} · ${g.categoria || '—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="parc-badge">${esc(g.parcela || '—')}</span>
+        <span class="parc-val">${fmtR(g.valor)}</span>
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONFIGURAÇÕES — Renderização e ações
+   ═══════════════════════════════════════════════════════════════ */
+
+// Renderiza a página de configurações com os valores salvos
+function renderConfig() {
+  $('cfg-renda').value  = renda || '';
+  $('cfg-limite').value = Math.round((limiteParcPct || LIMITE_PARC_DEFAULT) * 100);
+  $('cfg-tema').checked = temaEscuro;
+
+  // Restaura API Key do Gemini do localStorage (não fica no Firebase por segurança)
+  const savedKey = localStorage.getItem('geminiKey') || '';
+  if (savedKey) { geminiKey = savedKey; $('cfg-gemini-key').value = '••••••••••••'; }
+
+  renderCategorias();
+  preencherImportSelects();
+  atualizarFbStatus();
+}
+
+// Salva a API Key do Gemini apenas no localStorage (não sobe para o Firebase)
+window.saveGeminiKey = val => {
+  if (val && val !== '••••••••••••') {
+    geminiKey = val;
+    localStorage.setItem('geminiKey', val);
+    toast('API Key salva!');
+  }
+};
+
+// Alterna entre tema escuro e claro
+// Lê o estado do checkbox para evitar dessincronização (corrige o bug do duplo disparo)
+window.toggleTheme = () => {
+  const cb   = $('cfg-tema');
+  temaEscuro = cb ? cb.checked : !temaEscuro;
+  aplicarTema();
+  set(ref(DB, 'config/tema'), temaEscuro ? 'dark' : 'light');
+  fbStats.writes++;
+};
+
+// Aplica o tema escuro ou claro ao atributo data-theme do HTML
+// Só atualiza o checkbox se o valor estiver divergindo (evita loop)
+function aplicarTema() {
+  document.documentElement.setAttribute('data-theme', temaEscuro ? 'dark' : 'light');
+  const cb = $('cfg-tema');
+  if (cb && cb.checked !== temaEscuro) cb.checked = temaEscuro;
+}
+
+// Renderiza a lista de categorias (sistema + personalizadas) na tela de config
+function renderCategorias() {
+  const lista = $('cat-list');
+  if (!lista) return;
+
+  // Categorias do sistema (apenas exibição, sem botão de deletar)
+  const sistema = CATS_SISTEMA.map(cat =>
+    `<div class="cat-item">
+      <div class="cat-color-dot" style="background:${getCatColor(cat)}"></div>
+      <span class="cat-item-name">${esc(cat)}</span>
+      <span class="cat-item-system">Sistema</span>
+    </div>`
+  ).join('');
+
+  // Categorias criadas pelo usuário (com botão de deletar)
+  const extras = catExtra.map((cat, i) =>
+    `<div class="cat-item">
+      <div class="cat-color-dot" style="background:${cat.cor || '#94a3b8'}"></div>
+      <span class="cat-item-name">${esc(cat.nome)}</span>
+      <button class="btn-icon del btn-xs" onclick="removerCategoria(${i})">✕</button>
+    </div>`
+  ).join('');
+
+  lista.innerHTML = sistema + extras;
+}
+
+// Adiciona uma nova categoria personalizada
+window.adicionarCategoria = async () => {
+  const nome = $('nova-cat-nome').value.trim();
+  const cor  = $('nova-cat-cor').value;
+  if (!nome) { toast('Preencha o nome da categoria', 'err'); return; }
+  if (getAllCats().includes(nome)) { toast('Categoria já existe', 'err'); return; }
+  catExtra.push({ nome, cor });
+  await set(ref(DB, 'config/categorias'), catExtra);
+  fbStats.writes++;
+  $('nova-cat-nome').value = '';
+  updateCatSelects();
+  renderCategorias();
+  toast(`Categoria "${nome}" adicionada!`);
+};
+
+// Remove uma categoria personalizada pelo índice no array
+window.removerCategoria = async idx => {
+  if (!confirm(`Remover "${catExtra[idx]?.nome}"?`)) return;
+  catExtra.splice(idx, 1);
+  await set(ref(DB, 'config/categorias'), catExtra);
+  fbStats.writes++;
+  updateCatSelects();
+  renderCategorias();
+  toast('Categoria removida');
+};
+
+// Atualiza todos os <select> de categoria com as categorias disponíveis
+function updateCatSelects() {
+  const cats = getAllCats();
+  const opts = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  ['g-cat', 'd-cat'].forEach(id => {
+    const sel = $(id);
+    if (!sel) return;
+    const val = sel.value;
+    sel.innerHTML = `<option value="">Selecionar...</option>` + opts;
+    sel.value = val; // preserva o valor selecionado
+  });
+  // Também atualiza o filtro de categoria
+  const fc = $('filtro-cat');
+  if (fc) {
+    const val = fc.value;
+    fc.innerHTML = `<option value="">Todas categorias</option>` + opts;
+    fc.value = val;
+  }
+}
+
+// Expõe saveConfig globalmente (chamada por onchange inline no HTML)
+window.saveConfig = saveConfig;
+
+/* ═══════════════════════════════════════════════════════════════
+   IMPORTAÇÃO DE PLANILHA EXCEL — SheetJS
+   ═══════════════════════════════════════════════════════════════ */
+
+// Lê o arquivo .xlsx selecionado e monta a prévia para confirmação
+window.handleImportFile = file => {
+  const f = file.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      // Lê o arquivo com SheetJS e pega a primeira aba
+      const wb  = XLSX.read(e.target.result, { type: 'binary' });
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Tenta identificar automaticamente as colunas pelos cabeçalhos
+      const header = raw[0] || [];
+      const findCol = names => names.map(n =>
+        header.findIndex(h => String(h).toLowerCase().includes(n.toLowerCase()))
+      ).find(i => i > -1) ?? -1;
+
+      const cData  = findCol(['data', 'date']);
+      const cDesc  = findCol(['descrição', 'descricao', 'desc', 'nome']);
+      const cValor = findCol(['valor', 'value', 'R$']);
+      const cCat   = findCol(['categoria', 'cat']);
+      const cParc  = findCol(['parcela', 'parc']);
+
+      // Extrai linhas com valor válido (pula cabeçalho)
+      importData = raw.slice(1)
+        .filter(row => row[cValor] && parseFloat(row[cValor]) > 0)
+        .map(row => ({
+          data:      String(row[cData]  || '').trim() || today(),
+          descricao: String(row[cDesc]  || '').trim() || 'Importado',
+          valor:     parseFloat(row[cValor]) || 0,
+          categoria: String(row[cCat]   || '').trim() || 'Outros',
+          parcela:   String(row[cParc]  || '').trim() || '',
+        }));
+
+      // Monta a tabela de prévia
+      $('import-preview').innerHTML = `
+        <div class="import-row header">
+          <span style="flex:1">Data</span><span style="flex:2">Descrição</span>
+          <span style="flex:1">Valor</span><span style="flex:1">Categoria</span>
+        </div>
+        ${importData.slice(0, 15).map(r => `
+          <div class="import-row">
+            <span style="flex:1">${esc(r.data)}</span>
+            <span style="flex:2">${esc(r.descricao)}</span>
+            <span style="flex:1;font-family:var(--mono)">${fmtR(r.valor)}</span>
+            <span style="flex:1">${esc(r.categoria)}</span>
+          </div>`).join('')}
+        ${importData.length > 15 ? `<div class="import-row" style="justify-content:center;color:var(--mid)">+${importData.length - 15} mais...</div>` : ''}`;
+      $('import-count').textContent = `${importData.length} gastos encontrados`;
+      preencherImportSelects();
+      openModal('modal-import');
+    } catch (err) {
+      toast('Erro ao ler arquivo. Verifique o formato.', 'err');
+    }
+  };
+  reader.readAsBinaryString(f);
+};
+
+// Preenche os selects de cartão e mês/ano no modal de importação
+function preencherImportSelects() {
+  const cs = $('import-cartao');
+  const ms = $('import-mes-ano');
+  if (!cs || !ms) return;
+  cs.innerHTML = CARTOES.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  ms.innerHTML = '';
+  for (let i = -6; i <= 6; i++) {
+    const d = new Date(curYear, curMonth - 1 + i, 1);
+    const y = d.getFullYear(), m = d.getMonth() + 1;
+    ms.innerHTML += `<option value="${mk(y, m)}" ${y === curYear && m === curMonth ? 'selected' : ''}>${MESES_S[m - 1]} ${y}</option>`;
+  }
+}
+
+// Confirma e importa todos os dados da planilha para o Firebase
+window.confirmarImport = async () => {
+  if (!importData.length) { toast('Nenhum dado para importar', 'err'); return; }
+  const cartao     = $('import-cartao').value;
+  const mesAnoKey  = $('import-mes-ano').value;
+  loading(true);
+  try {
+    for (const g of importData) {
+      await push(ref(DB, `gastos/${mesAnoKey}`), {
+        ...g, cartao, tipo: g.parcela ? 'parcelado' : 'normal'
+      });
+      fbStats.writes++;
+    }
+    closeModal('modal-import');
+    const n = importData.length;
+    importData = [];
+    await loadGastos();
+    renderCartoes();
+    toast(`✦ ${n} gastos importados!`);
+  } catch (e) { toast('Erro ao importar', 'err'); }
+  loading(false);
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   GEMINI API — Assistente financeiro
+   ═══════════════════════════════════════════════════════════════ */
+
+// Envia uma mensagem ao Gemini e exibe a resposta no chat
+window.sendChat = async () => {
+  const input = $('chat-input');
+  const msg   = input.value.trim();
+  if (!msg) return;
+
+  const key = geminiKey || localStorage.getItem('geminiKey');
+  if (!key) { toast('Configure sua API Key do Gemini em Configurações', 'warn'); return; }
+
+  appendChatMsg(msg, 'user');
+  input.value = '';
+  const thinkId = appendChatMsg('...', 'ai', true); // indicador de "digitando"
+
+  try {
+    // Monta contexto financeiro resumido para enviar ao Gemini
+    const totalCartoes = gastos.reduce((s, g) => s + (g.valor || 0), 0);
+    const totalDebitos = debitos.filter(d => d.status === 'ativo').reduce((s, d) => s + (d.valor || 0), 0);
+    const porCat = {};
+    gastos.forEach(g => { const c = g.categoria || 'Outros'; porCat[c] = (porCat[c] || 0) + (g.valor || 0); });
+    const catStr = Object.entries(porCat).map(([k, v]) => `${k}: R$${v.toFixed(2)}`).join(', ');
+
+    const prompt = `Você é um assistente financeiro pessoal em português do Brasil.
+Dados do mês atual (${MESES[curMonth - 1]} ${curYear}):
+- Total cartões: R$${totalCartoes.toFixed(2)}
+- Total débitos fixos: R$${totalDebitos.toFixed(2)}
+- Renda mensal: R$${renda.toFixed(2)}
+- Gastos por categoria: ${catStr || 'sem dados'}
+- Saldo estimado: R$${(renda - totalCartoes - totalDebitos).toFixed(2)}
+Responda de forma direta e útil: ${msg}`;
+
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+    );
+    const data  = await resp.json();
+    const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    document.getElementById(thinkId)?.remove();
+    appendChatMsg(texto, 'ai');
+  } catch (err) {
+    document.getElementById(thinkId)?.remove();
+    appendChatMsg('Erro ao conectar com o Gemini. Verifique sua API Key.', 'ai');
+  }
+};
+
+// Adiciona uma mensagem ao histórico do chat
+function appendChatMsg(texto, tipo, isTemp = false) {
+  const chat = $('gemini-chat');
+  const id   = 'msg-' + Date.now();
+  const div  = document.createElement('div');
+  div.id = id; div.className = `chat-msg ${tipo}`;
+  div.innerHTML = `<div class="chat-avatar">${tipo === 'ai' ? '🤖' : '👤'}</div><div class="chat-bubble">${esc(texto)}</div>`;
+  if (isTemp) div.style.opacity = '0.5';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return id;
+}
+
+// Dispara sugestão automática de categoria pelo Gemini ao digitar a descrição
+window.onGastoDescInput = () => {
+  clearTimeout(geminiSugTimer);
+  const desc = $('g-desc')?.value.trim();
+  const key  = geminiKey || localStorage.getItem('geminiKey');
+  if (!desc || desc.length < 3 || !key) {
+    $('gemini-sug')?.classList.remove('show'); return;
+  }
+  // Aguarda 800ms sem digitação antes de chamar a API
+  geminiSugTimer = setTimeout(async () => {
+    try {
+      const cats = getAllCats().join(', ');
+      const prompt = `Dado o gasto "${desc}", escolha UMA categoria dentre: ${cats}. Responda apenas o nome exato da categoria.`;
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 20 } }) }
+      );
+      const data = await resp.json();
+      const sug  = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      if (sug && getAllCats().includes(sug)) {
+        $('gemini-sug-text').textContent = `✨ Gemini sugere: ${sug} — Clique para aplicar`;
+        $('gemini-sug').dataset.sug = sug;
+        $('gemini-sug').classList.add('show');
+      }
+    } catch { /* silencioso */ }
+  }, 800);
+};
+
+// Aplica a sugestão do Gemini no campo de categoria
+window.applyGeminiSuggestion = () => {
+  const sug = $('gemini-sug').dataset.sug;
+  if (sug) {
+    $('g-cat').value = sug;
+    $('gemini-sug').classList.remove('show');
+    toast(`Categoria "${sug}" aplicada!`);
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS DE FORMULÁRIOS
+   ═══════════════════════════════════════════════════════════════ */
+
+// Preenche os selects de mês/ano de encerramento dos débitos
+function preencherDebitoAteSelects() {
+  const mesSel = $('d-ate-mes');
+  const anoSel = $('d-ate-ano');
+  if (!mesSel || mesSel.options.length) return;
+  MESES.forEach((m, i) => { mesSel.innerHTML += `<option value="${i + 1}">${m}</option>`; });
+  for (let y = curYear; y <= curYear + 15; y++) {
+    anoSel.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+}
+
+// Preenche os selects de mês/ano destino no modal de edição de gasto
+function preencherGastoDestinoSelects() {
+  const mesSel = $('g-mes-dest');
+  const anoSel = $('g-ano-dest');
+  if (!mesSel || !anoSel) return;
+  mesSel.innerHTML = MESES.map((m, i) =>
+    `<option value="${i + 1}" ${i + 1 === curMonth ? 'selected' : ''}>${m}</option>`
+  ).join('');
+  if (!anoSel.options.length) {
+    for (let y = curYear - 2; y <= curYear + 2; y++) {
+      anoSel.innerHTML += `<option value="${y}" ${y === curYear ? 'selected' : ''}>${y}</option>`;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITÁRIOS DE UI
+   ═══════════════════════════════════════════════════════════════ */
+
+// Abre um modal pelo id
+window.openModal  = id => document.getElementById(id)?.classList.add('open');
+
+// Fecha um modal pelo id
+window.closeModal = id => document.getElementById(id)?.classList.remove('open');
+
+// Ação do botão flutuante (FAB) no mobile — abre o modal relevante para a página atual
+window.fabAction = () => {
+  if (curPage === 'cartoes')   openGastoModal();
+  else if (curPage === 'debitos')   openDebitoModal();
+  else if (curPage === 'dashboard') addDashWidget();
+  else navTo('cartoes');
+};
+
+// Exibe/oculta o spinner de carregamento
+function loading(v) { $('loading').classList.toggle('on', v); }
+
+// Exibe uma mensagem temporária na tela (toast)
+// tipo: 'ok' (verde), 'err' (vermelho), 'warn' (amarelo)
+function toast(msg, tipo = 'ok') {
+  const t = $('toast');
+  t.textContent = msg; t.className = 'show ' + tipo;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => (t.className = ''), 2800);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INICIALIZAÇÃO
+   Executado quando o DOM está completamente carregado
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Define datas padrão nos campos de data dos modais
+  $('g-data').value = today();
+
+  // Inicia monitoramento da conexão Firebase em tempo real
+  monitorarConexao();
+
+  // Recupera API Key do Gemini salva anteriormente no navegador
+  const savedKey = localStorage.getItem('geminiKey');
+  if (savedKey) geminiKey = savedKey;
+
+  // Renderiza as abas de meses
+  updateMonthTabs();
+  updateSidebarMonth();
+
+  // Carrega todos os dados e inicializa a plataforma
+  loadAll();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+/* ═══════════════════════════════════════════════════════════════
+   PÁGINA DÉBITOS FIXOS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Header dos débitos ─── */
+.debitos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.debitos-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ─── Lista de débitos ─── */
+.debitos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.debito-item {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--tr);
+}
+
+.debito-item:hover {
+  background: var(--s3);
+}
+
+.debito-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r2);
+  border: 2px solid var(--border);
+  background: var(--s1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--tr);
+}
+
+.debito-checkbox.pago {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.debito-checkbox.pago::after {
+  content: '✓';
+  color: #000;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.debito-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.debito-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.debito-val-wrap {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.debito-val {
+  font-family: var(--mono);
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.badge-pago {
+  font-size: .6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--tr);
+}
+
+.badge-pago.sim {
+  background: var(--accent2);
+  color: var(--accent);
+}
+
+.badge-pago.nao {
+  background: var(--s3);
+  color: var(--dim);
+  border: 1px dashed var(--border);
+}
+
+.badge-pago:hover {
+  filter: brightness(1.1);
+}
+
+.debito-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.debito-item.pausado {
+  opacity: 0.7;
+}
+
+.debito-item.encerrado {
+  opacity: 0.5;
+}
+
+/* ─── Seção de totais ─── */
+.debitos-total {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.debitos-total-label {
+  font-size: .75rem;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.debitos-total-val {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+}
+
+/* ─── Reajuste ─── */
+.reajuste-box {
+  background: var(--s3);
+  border: 1px dashed var(--border);
+  border-radius: var(--r2);
+  padding: 10px 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reajuste-box input {
+  width: 100px;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: .8rem;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  color: var(--text);
+}
